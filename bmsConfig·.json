@@ -1,0 +1,315 @@
+{
+    "CHM": {
+        "describe": "充电机握手",
+        "PGN": "0x2600",
+        "priority": 6,
+        "total_bytes": 3,
+        "target_origin": "0xf456",
+        "optional_count": 0,
+        "data": {
+            "BMS协议版本": 3
+        }
+    },
+    "BHM": {
+        "describe": "车辆握手",
+        "PGN": "0x2700",
+        "priority": 6,
+        "total_bytes": 2,
+        "target_origin": "0x56f4",
+        "optional_count": 0,
+        "data": {
+            "BHM-最高允许充电总电压": 2
+        }
+    },
+    "CRM": {
+        "describe": "充电机辨识",
+        "PGN": "0x0100",
+        "priority": 6,
+        "total_bytes": 8,
+        "target_origin": "0xf456",
+        "optional_count": 1,
+        "data": {
+            "CRM-辨识结果": 1,
+            "充电机编号": 4,
+            "充电机所在区域编码": 3
+        }
+    },
+    "BRM": {
+        "describe": "BMS和车辆辨识报文",
+        "PGN": "0x0200",
+        "priority": 7,
+        "total_bytes": 41,
+        "target_origin": "0x56f4",
+        "optional_count": 10,
+        "data": {
+            "BMS协议版本": 3,
+            "电池类型": 1,
+            "整车动力蓄电池系统额定容量/Ah": 2,
+            "整车动力蓄电池系统额定总电压/V": 2,
+            "电池生产厂商名称": 4,
+            "电池组序号": 4,
+            "电池组生产日期": 3,
+            "电池组充电次数": 3,
+            "电池组产权标识": 1,
+            "预留": 1,
+            "车辆识别码(VIN)": 17,
+            "BMS软件版本": 8
+        }
+    },
+    "BCP": {
+        "describe": "动力蓄电池充电参数",
+        "PGN": "0x0600",
+        "priority": 7,
+        "total_bytes": 13,
+        "target_origin": "0x56f4",
+        "optional_count": 0,
+        "data": {
+            "单体动力蓄电池最高允许充电电压": 2,
+            "最高允许充电电流": 2,
+            "动力蓄电池标称总能量": 2,
+            "最高允许充电总电压": 2,
+            "最高允许温度": 1,
+            "整车动力蓄电池荷电状态": 2,
+            "整车动力蓄电池当前电池电压": 2
+        }
+    },
+    "CTS": {
+        "describe": "充电机发送时间同步信息",
+        "PGN": "0x0700",
+        "priority": 6,
+        "total_bytes": 7,
+        "target_origin": "0xf456",
+        "optional_count": 1,
+        "data": {
+            "同步时间(年月日时分秒)": 7
+        }
+    },
+    "CML": {
+        "describe": "充电机最大输出能力",
+        "PGN": "0x0800",
+        "priority": 6,
+        "total_bytes": 8,
+        "target_origin": "0xf456",
+        "optional_count": 0,
+        "data": {
+            "最高输出电压(V)": 2,
+            "最低输出电压(V)": 2,
+            "最高输出电流(A)": 2,
+            "最低输出电流(A)": 2
+        }
+    },
+    "BRO": {
+        "describe": "电池充电准备就绪状态",
+        "PGN": "0x0900",
+        "priority": 4,
+        "total_bytes": 1,
+        "target_origin": "0x56f4",
+        "optional_count": 0,
+        "data": {
+            "BMS是否充电准备好": 1
+        }
+    },
+    "CRO": {
+        "describe": "充电机输出准备就绪状态",
+        "PGN": "0x0A00",
+        "priority": 4,
+        "total_bytes": 1,
+        "target_origin": "0xf456",
+        "optional_count": 0,
+        "data": {
+            "充电机是否准备好": 1
+        }
+    },
+    "BCL": {
+        "describe": "电池充电需求",
+        "PGN": "0x1000",
+        "priority": 6,
+        "total_bytes": 5,
+        "target_origin": "0x56f4",
+        "optional_count": 0,
+        "data": {
+            "电压需求(V)": 2,
+            "电流需求(A)": 2,
+            "充电模式": 1
+        }
+    },
+    "BCS": {
+        "describe": "电池充电总状态",
+        "PGN": "0x1100",
+        "priority": 7,
+        "total_bytes": 9,
+        "target_origin": "0x56f4",
+        "optional_count": 0,
+        "data": {
+            "充电电压测量值": 2,
+            "充电电流测量值": 2,
+            "最高单体动力蓄电池电压及其组号": 2,
+            "当前荷电状态SOC(%)": 1,
+            "估算剩余充电时间": 2
+        }
+    },
+    "CCS": {
+        "describe": "充电机充电状态",
+        "PGN": "0x1200",
+        "priority": 6,
+        "total_bytes": 8,
+        "target_origin": "0xf456",
+        "optional_count": 0,
+        "data": {
+            "电压输出值": 2,
+            "电流输出值": 2,
+            "累计充电时间": 2, 
+            "充电允许": 2
+        }
+    },
+    "BSM": {
+        "describe": "动力蓄电池状态信息",
+        "PGN": "0x1300",
+        "priority": 6,
+        "total_bytes": 19,
+        "target_origin": "0x56f4",
+        "optional_count": 0,
+        "data": {
+            "最高单体动力蓄电池电压所在编号": 1,
+            "最高动力蓄电池温度": 1, 
+            "最高温度检测点编号": 1, 
+            "最低动力蓄电池温度": 1, 
+            "最低动力蓄电池温度检测点编号": 1, 
+            "单体动力蓄电池电压过高/过低": 2,
+            "整车动力蓄电池荷电状态SOC过高/过低": 2,
+            "动力蓄电池充电过电流": 2,
+            "动力蓄电池温度过高": 2,
+            "动力蓄电池绝缘状态": 2,
+            "动力蓄电池组输出连接器连接状态": 2,
+            "充电允许": 2
+        }
+    },
+    "BMV": {
+        "describe": "单体动力蓄电池电压",
+        "PGN": "0x1500",
+        "priority": 7,
+        "total_bytes": null,
+        "cell_bytes": 2,
+        "max_count": 256,
+        "target_origin": "0x56f4",
+        "optional_count": "all",
+        "data": {
+            "单体动力蓄电池电压": []
+        }
+    },
+    "BMT": {
+        "describe": "动力蓄电池温度",
+        "PGN": "0x1600",
+        "priority": 7,
+        "total_bytes": null,
+        "cell_bytes": 1,
+        "max_count": 128,
+        "target_origin": "0x56f4",
+        "optional_count": "all",
+        "data": {
+            "动力蓄电池温度": []
+        }
+    },
+    "BSP": {
+        "describe": "动力蓄电池预留报文",
+        "PGN": "0x1700",
+        "priority": 7,
+        "total_bytes": null,
+        "cell_bytes": 1,
+        "max_count": 16,
+        "target_origin": "0x56f4",
+        "optional_count": "all",
+        "data": {
+            "动力蓄电池预留字段": []
+        }
+    },
+    "BST": {
+        "describe": "BMS中止充电",
+        "PGN": "0x1900",
+        "priority": 4,
+        "total_bytes": 4,
+        "target_origin": "0x56f4",
+        "optional_count": 0,
+        "data": {
+            "BMS中止充电原因": 1,
+            "BMS中止充电故障原因": 2,
+            "BMS中止充电错误原因": 1
+        }
+    },
+    "CST": {
+        "describe": "充电机中止充电",
+        "PGN": "0x1A00",
+        "priority": 4,
+        "total_bytes": 4,
+        "target_origin": "0xf456",
+        "optional_count": 0,
+        "data": {
+            "充电机中止充电原因": 1,
+            "充电机中止充电故障原因": 2,
+            "充电机中止充电错误原因": 1
+        }
+    },
+    "BSD": {
+        "describe": "BMS统计数据",
+        "PGN": "0x1C00",
+        "priority": 6,
+        "total_bytes": 7,
+        "target_origin": "0x56f4",
+        "optional_count": 0,
+        "data": {
+            "中止荷电状态SOC(%)": 1,
+            "动力蓄电池单体最低电压(V)": 2,
+            "动力蓄电池单体最高电压(V)": 2,
+            "动力蓄电池最低温度(℃)": 1,
+            "动力蓄电池最高温度(℃)": 1
+        }
+    },
+    "CSD": {
+        "describe": "充电机统计数据",
+        "PGN": "0x1D00",
+        "priority": 6,
+        "total_bytes": 8,
+        "target_origin": "0xf456",
+        "optional_count": 0,
+        "data": {
+            "累计充电时间(min)": 2,
+            "输出能量(kW*h)": 2,
+            "充电机编号": 4
+        }
+    },
+    "BEM": {
+        "describe": "BMS错误报文",
+        "PGN": "0x1E00",
+        "priority": 2,
+        "total_bytes": 4,
+        "target_origin": "0x56f4",
+        "optional_count": 1,
+        "data": {
+            "接收CRM-BMS不能辨识的充电机辨识报文超时": 2,
+            "接收CRM-BMS能辨识的充电机辨识报文超时": 2,
+            "接收充电机的时间同步和充电机最大输出能力报文超时": 2,
+            "接收充电机完成充电准备报文超时": 2,
+            "接收充电机充电状态报文超时": 2,
+            "接收充电机中止充电报文超时": 2,
+            "接收充电机充电统计报文超时": 2,
+            "其他": 6
+        }
+    },
+    "CEM": {
+        "describe": "充电机错误报文",
+        "PGN": "0x1F00",
+        "priority": 2,
+        "total_bytes": 4,
+        "target_origin": "0xf456",
+        "data": {
+            "接收BMS和车辆的辨识报文超时": 2,
+            "接收电池充电参数报文超时": 2,
+            "接收BMS完成充电准备报文超时": 2,
+            "接收电池充电总状态报文超时": 2,
+            "接收电池充电要求报文超时": 2,
+            "接收BMS中止充电报文超时": 2,
+            "接收BMS充电统计报文超时": 2,
+            "其他": 6
+        }
+    }
+}
