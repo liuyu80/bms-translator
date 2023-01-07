@@ -2,12 +2,12 @@
 # -*- coding:utf-8 -*-
 
 '''
- Description  : 
+ Description  : BMS报文翻译官
  Version      : 1.0
  Author       : liuyu
  Date         : 2023-01-07 09:04:55
  LastEditors  : liuyu
- LastEditTime : 2023-01-07 15:15:54
+ LastEditTime : 2023-01-07 15:18:23
  FilePath     : \\BMS-translator\\main.py
  Copyright (C) 2023 liuyu. All rights reserved.
 '''
