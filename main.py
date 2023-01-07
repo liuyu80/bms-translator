@@ -7,7 +7,7 @@
  Author       : liuyu
  Date         : 2023-01-07 09:04:55
  LastEditors  : liuyu
- LastEditTime : 2023-01-07 16:17:16
+ LastEditTime : 2023-01-07 16:58:48
  FilePath     : \\BMS-translator\\main.py
  Copyright (C) 2023 liuyu. All rights reserved.
 '''
@@ -15,7 +15,7 @@
 import json, os, csv, struct, time
 import pandas as pd
 
-
+'''多帧报文识别内部变量'''
 more_frame_config = {
     'name': '',
     'reply': False,
@@ -26,11 +26,21 @@ more_frame_config = {
     'total_bytes': 0
 }
 
+'''
+ description: 读取json配置文件
+ param {*} path 文件路径
+ return {*} dict类型
+'''
 def read_json(path = 'bmsConfig·.json'):
     with open(path, "r", encoding='utf-8') as fp:
         data = json.load(fp)
         return (data)
 
+'''
+ description: 读取BMS报文csv文件
+ param {*} path 文件路径
+ return {*} pandas.Dataframe 对象
+'''
 def get_csv_data(path):
     header = ['序号','传输方向','时间标识','名称','帧ID','帧格式','帧类型','数据长度','数据(HEX)']
     if os.path.getctime(path) > os.path.getmtime(path):
@@ -46,14 +56,22 @@ def get_csv_data(path):
     csv_df['时间标识'] = create_time + csv_df['时间标识']
     # print(csv_df.head())
     return csv_df
-    
+
+'''
+ description: pgn==0xec00, 多帧报文的开始 回应 结束的识别
+ param {*} pgn  报文组编号
+ param {*} bit  多帧报文的控制, 用于识别报文的开始 回应 结束
+ param {*} dataRaw 报文源数据
+ param {*} priority 报文组号的优先级
+ return {*} 识别的多帧报文名称
+'''
 def set_more_frame_name(pgn, bit, dataRaw, priority):
     if bit == 0x10:
         more_frame_config['start'] = True
         more_frame_config['end'] = False
         more_frame_config['reply'] = False
     elif bit == 0x11:
-        more_frame_config['total'] = dataRaw & 0xff000000000000
+        more_frame_config['total'] = (dataRaw & 0xff000000000000) >> 4*12
         more_frame_config['reply'] = True
         more_frame_config['start'] = False
     elif bit == 0x13:
@@ -64,7 +82,6 @@ def set_more_frame_name(pgn, bit, dataRaw, priority):
         more_frame_config['count'] = 0
         more_frame_config['name'] = ''
         more_frame_config['total_bytes'] = 0
-
 
     for key in data_js.keys():
         if int(data_js[key]['PGN'], 16) == pgn and \
@@ -79,9 +96,15 @@ def set_more_frame_name(pgn, bit, dataRaw, priority):
                 return key + '-end'
     return '非标未识别'
             
-
-
-def find_bms_name(id, pgn, priority, receive_send, dataLength, dataRaw):
+''' 
+ description:  识别一帧报文<= 8 byte 和 多帧报文的数据帧
+ param {*} pgn  报文组编号
+ param {*} priority   报文组编号的优先级
+ param {*} receive_send   报文的 目的地址 和 发送地址
+ param {*} dataRaw  报文源数据
+ return {*} 识别报文的名字
+'''
+def find_bms_name(pgn, priority, receive_send, dataRaw):
     if pgn == 0xec00: 
         pgn = dataRaw & 0xffff
         control_bit = dataRaw >> 4*14
@@ -94,11 +117,18 @@ def find_bms_name(id, pgn, priority, receive_send, dataLength, dataRaw):
             return key
         if pgn == 0xeb00:
             if more_frame_config['name']:
-                more_frame_config['count'] += 1
-                return f"{more_frame_config['name']}-{more_frame_config['count']}"
-
+                more_frame_config['count'] = dataRaw >> 4 * 14
+                if more_frame_config['count'] <= more_frame_config['total']:
+                    return f"{more_frame_config['name']}-{more_frame_config['count']}"
+                else:
+                    return '多帧识别错误'
     return '非标未识别'
 
+'''
+ description: 解析帧ID 和 格式化报文源数据
+ param {*} data pandas.series 对象 csv文件数据
+ return {*} 报文名称
+'''
 def param_msg_name(data):
     id = int(data['帧ID'], 16)               #帧ID
     dataLength = data['数据长度']                #数据长度
@@ -106,12 +136,16 @@ def param_msg_name(data):
     priority = (id >> 4*6) >> 2         #优先级
     pgn = (id>>4*2) & 0xff00            #获取组编号
     receive_send = (id & 0xffff)
-    print(f'{pgn:x}, {priority:d}, {receive_send:x}, {dataLength:d}, {dataRaw:x}')
-    return find_bms_name(data['序号'], pgn, priority, receive_send, dataLength, dataRaw)
+    # print(f'{pgn:x}, {priority:d}, {receive_send:x}, {dataLength:d}, {dataRaw:x}')
+    return find_bms_name(pgn, priority, receive_send, dataRaw)
 
-
+'''
+ description: 给名称一列赋值
+ param {*} df pandas.Dataframe 对象 csv文件的数据
+ return {*} pandas.Dataframe
+'''
 def set_msg_name(df):
-    df['名称'] = df.loc[ : , ['序号', '帧ID', '数据长度', '数据(HEX)']].apply(param_msg_name, axis=1)
+    df['名称'] = df.loc[ : , ['帧ID', '数据长度', '数据(HEX)']].apply(param_msg_name, axis=1)
     return df
 
 
@@ -121,7 +155,6 @@ if __name__ == "__main__":
     csv_df = get_csv_data('BVIN1枪.CSV')
 
     csv_df = set_msg_name(csv_df)
-    
 
     csv_df.to_csv('1.csv', index =None)
     
