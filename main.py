@@ -7,13 +7,14 @@
  Author       : liuyu
  Date         : 2023-01-07 09:04:55
  LastEditors  : liuyu
- LastEditTime : 2023-01-07 16:58:48
+ LastEditTime : 2023-01-07 17:31:02
  FilePath     : \\BMS-translator\\main.py
  Copyright (C) 2023 liuyu. All rights reserved.
 '''
 
-import json, os, csv, struct, time
+import json, os, csv, time
 import pandas as pd
+from struct import unpack
 
 '''多帧报文识别内部变量'''
 more_frame_config = {
@@ -121,7 +122,7 @@ def find_bms_name(pgn, priority, receive_send, dataRaw):
                 if more_frame_config['count'] <= more_frame_config['total']:
                     return f"{more_frame_config['name']}-{more_frame_config['count']}"
                 else:
-                    return '多帧识别错误'
+                    return 'error'
     return '非标未识别'
 
 '''
@@ -139,6 +140,23 @@ def param_msg_name(data):
     # print(f'{pgn:x}, {priority:d}, {receive_send:x}, {dataLength:d}, {dataRaw:x}')
     return find_bms_name(pgn, priority, receive_send, dataRaw)
 
+
+def one_frame_analysis(json_dic, name, length, dataRaw):
+    
+    pass
+
+def analysis_dataRaw(data):
+    if data['名称'].find("非标") != -1:
+        return '非标未识别'
+    elif data['名称'] == 'error':
+        return '解析错误'
+    elif data['名称'].find("-") != -1:
+        return '多帧报文'
+    dataRaw = int(data['数据(HEX)'].replace(' ',''), 16)      #数据(HEX)
+    if data['名称'] in data_js.keys():
+        one_frame_analysis(data_js[data['名称']], data[0], data[1], data[2])
+    
+
 '''
  description: 给名称一列赋值
  param {*} df pandas.Dataframe 对象 csv文件的数据
@@ -148,6 +166,9 @@ def set_msg_name(df):
     df['名称'] = df.loc[ : , ['帧ID', '数据长度', '数据(HEX)']].apply(param_msg_name, axis=1)
     return df
 
+def set_meaning(df):
+    df['BMS报文翻译'] = df.loc[ :100 , ['名称', '数据长度', '数据(HEX)']].apply(analysis_dataRaw, axis=1)
+    return df
 
 if __name__ == "__main__":
     global data_js
@@ -155,6 +176,7 @@ if __name__ == "__main__":
     csv_df = get_csv_data('BVIN1枪.CSV')
 
     csv_df = set_msg_name(csv_df)
+    csv_df = set_meaning(csv_df)
 
     csv_df.to_csv('1.csv', index =None)
     
