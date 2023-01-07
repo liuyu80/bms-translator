@@ -4,7 +4,7 @@
         "PGN": "0x2600",
         "priority": 6,
         "total_bytes": 3,
-        "target_origin": "0xf456",
+        "receive_send": "0xf456",
         "optional_count": 0,
         "data": {
             "BMS协议版本": 3
@@ -15,7 +15,7 @@
         "PGN": "0x2700",
         "priority": 6,
         "total_bytes": 2,
-        "target_origin": "0x56f4",
+        "receive_send": "0x56f4",
         "optional_count": 0,
         "data": {
             "BHM-最高允许充电总电压": 2
@@ -26,7 +26,7 @@
         "PGN": "0x0100",
         "priority": 6,
         "total_bytes": 8,
-        "target_origin": "0xf456",
+        "receive_send": "0xf456",
         "optional_count": 1,
         "data": {
             "CRM-辨识结果": 1,
@@ -39,7 +39,7 @@
         "PGN": "0x0200",
         "priority": 7,
         "total_bytes": 41,
-        "target_origin": "0x56f4",
+        "receive_send": "0x56f4",
         "optional_count": 10,
         "data": {
             "BMS协议版本": 3,
@@ -61,7 +61,7 @@
         "PGN": "0x0600",
         "priority": 7,
         "total_bytes": 13,
-        "target_origin": "0x56f4",
+        "receive_send": "0x56f4",
         "optional_count": 0,
         "data": {
             "单体动力蓄电池最高允许充电电压": 2,
@@ -78,7 +78,7 @@
         "PGN": "0x0700",
         "priority": 6,
         "total_bytes": 7,
-        "target_origin": "0xf456",
+        "receive_send": "0xf456",
         "optional_count": 1,
         "data": {
             "同步时间(年月日时分秒)": 7
@@ -89,7 +89,7 @@
         "PGN": "0x0800",
         "priority": 6,
         "total_bytes": 8,
-        "target_origin": "0xf456",
+        "receive_send": "0xf456",
         "optional_count": 0,
         "data": {
             "最高输出电压(V)": 2,
@@ -103,7 +103,7 @@
         "PGN": "0x0900",
         "priority": 4,
         "total_bytes": 1,
-        "target_origin": "0x56f4",
+        "receive_send": "0x56f4",
         "optional_count": 0,
         "data": {
             "BMS是否充电准备好": 1
@@ -114,7 +114,7 @@
         "PGN": "0x0A00",
         "priority": 4,
         "total_bytes": 1,
-        "target_origin": "0xf456",
+        "receive_send": "0xf456",
         "optional_count": 0,
         "data": {
             "充电机是否准备好": 1
@@ -125,7 +125,7 @@
         "PGN": "0x1000",
         "priority": 6,
         "total_bytes": 5,
-        "target_origin": "0x56f4",
+        "receive_send": "0x56f4",
         "optional_count": 0,
         "data": {
             "电压需求(V)": 2,
@@ -138,7 +138,7 @@
         "PGN": "0x1100",
         "priority": 7,
         "total_bytes": 9,
-        "target_origin": "0x56f4",
+        "receive_send": "0x56f4",
         "optional_count": 0,
         "data": {
             "充电电压测量值": 2,
@@ -153,7 +153,7 @@
         "PGN": "0x1200",
         "priority": 6,
         "total_bytes": 8,
-        "target_origin": "0xf456",
+        "receive_send": "0xf456",
         "optional_count": 0,
         "data": {
             "电压输出值": 2,
@@ -167,7 +167,7 @@
         "PGN": "0x1300",
         "priority": 6,
         "total_bytes": 19,
-        "target_origin": "0x56f4",
+        "receive_send": "0x56f4",
         "optional_count": 0,
         "data": {
             "最高单体动力蓄电池电压所在编号": 1,
@@ -191,7 +191,7 @@
         "total_bytes": null,
         "cell_bytes": 2,
         "max_count": 256,
-        "target_origin": "0x56f4",
+        "receive_send": "0x56f4",
         "optional_count": "all",
         "data": {
             "单体动力蓄电池电压": []
@@ -204,7 +204,7 @@
         "total_bytes": null,
         "cell_bytes": 1,
         "max_count": 128,
-        "target_origin": "0x56f4",
+        "receive_send": "0x56f4",
         "optional_count": "all",
         "data": {
             "动力蓄电池温度": []
@@ -217,7 +217,7 @@
         "total_bytes": null,
         "cell_bytes": 1,
         "max_count": 16,
-        "target_origin": "0x56f4",
+        "receive_send": "0x56f4",
         "optional_count": "all",
         "data": {
             "动力蓄电池预留字段": []
@@ -228,7 +228,7 @@
         "PGN": "0x1900",
         "priority": 4,
         "total_bytes": 4,
-        "target_origin": "0x56f4",
+        "receive_send": "0x56f4",
         "optional_count": 0,
         "data": {
             "BMS中止充电原因": 1,
@@ -241,7 +241,7 @@
         "PGN": "0x1A00",
         "priority": 4,
         "total_bytes": 4,
-        "target_origin": "0xf456",
+        "receive_send": "0xf456",
         "optional_count": 0,
         "data": {
             "充电机中止充电原因": 1,
@@ -254,7 +254,7 @@
         "PGN": "0x1C00",
         "priority": 6,
         "total_bytes": 7,
-        "target_origin": "0x56f4",
+        "receive_send": "0x56f4",
         "optional_count": 0,
         "data": {
             "中止荷电状态SOC(%)": 1,
@@ -269,7 +269,7 @@
         "PGN": "0x1D00",
         "priority": 6,
         "total_bytes": 8,
-        "target_origin": "0xf456",
+        "receive_send": "0xf456",
         "optional_count": 0,
         "data": {
             "累计充电时间(min)": 2,
@@ -282,7 +282,7 @@
         "PGN": "0x1E00",
         "priority": 2,
         "total_bytes": 4,
-        "target_origin": "0x56f4",
+        "receive_send": "0x56f4",
         "optional_count": 1,
         "data": {
             "接收CRM-BMS不能辨识的充电机辨识报文超时": 2,
@@ -300,7 +300,7 @@
         "PGN": "0x1F00",
         "priority": 2,
         "total_bytes": 4,
-        "target_origin": "0xf456",
+        "receive_send": "0xf456",
         "data": {
             "接收BMS和车辆的辨识报文超时": 2,
             "接收电池充电参数报文超时": 2,
