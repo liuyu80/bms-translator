@@ -26,6 +26,10 @@ def bms_check(dic):
         for cell in dic[key]['data'].keys():
             if "bytes/bit" not in dic[key]['data'][cell].keys():
                 print(f"{key} 下的 {cell} 缺少bytes/bit字段")
+            if "components" in dic[key]['data'][cell].keys():
+                for line in dic[key]['data'][cell]["components"]:
+                    if "bytes/bit" not in line.keys():
+                        print(f"{key} 的 {cell} 的components 缺少bytes/bit字段")
             for line in necessarykeys: 
                 find_cell_keys = list(set(dic[key]['data'][cell].keys()) & set(line))
                 if not operator.eq(sorted(find_cell_keys), sorted(line)):
