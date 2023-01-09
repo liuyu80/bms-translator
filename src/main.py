@@ -15,6 +15,8 @@
 import json, os, csv, time
 import pandas as pd
 from struct import unpack
+from analysis import *
+from check_BMS_json import *
 
 '''多帧报文识别内部变量'''
 more_frame_config = {
@@ -26,6 +28,7 @@ more_frame_config = {
     'count': 0,
     'total_bytes': 0
 }
+global data_js
 
 '''
  description: 读取json配置文件
@@ -54,7 +57,7 @@ def get_csv_data(path):
     header.append('BMS报文翻译')
     csv_df = csv_df.reindex(columns=header)
 
-    csv_df['时间标识'] = create_time + csv_df['时间标识']
+    # csv_df['时间标识'] = create_time + csv_df['时间标识']
     # print(csv_df.head())
     return csv_df
 
@@ -95,7 +98,7 @@ def set_more_frame_name(pgn, bit, dataRaw, priority):
             elif more_frame_config['end']:
                 more_frame_config['end'] = False
                 return key + '-end'
-    return '非标未识别'
+    return '非标'
             
 ''' 
  description:  识别一帧报文<= 8 byte 和 多帧报文的数据帧
@@ -123,7 +126,10 @@ def find_bms_name(pgn, priority, receive_send, dataRaw):
                     return f"{more_frame_config['name']}-{more_frame_config['count']}"
                 else:
                     return 'error'
-    return '非标未识别'
+                
+    if receive_send not in [0xf456, 0x56f4]:
+        return 'error'
+    return '非标'
 
 '''
  description: 解析帧ID 和 格式化报文源数据
@@ -132,18 +138,12 @@ def find_bms_name(pgn, priority, receive_send, dataRaw):
 '''
 def param_msg_name(data):
     id = int(data['帧ID'], 16)               #帧ID
-    dataLength = data['数据长度']                #数据长度
     dataRaw = int(data['数据(HEX)'].replace(' ',''), 16)      #数据(HEX)
     priority = (id >> 4*6) >> 2         #优先级
     pgn = (id>>4*2) & 0xff00            #获取组编号
     receive_send = (id & 0xffff)
     # print(f'{pgn:x}, {priority:d}, {receive_send:x}, {dataLength:d}, {dataRaw:x}')
     return find_bms_name(pgn, priority, receive_send, dataRaw)
-
-
-def one_frame_analysis(json_dic, name, length, dataRaw):
-    
-    pass
 
 def analysis_dataRaw(data):
     if data['名称'].find("非标") != -1:
@@ -152,10 +152,11 @@ def analysis_dataRaw(data):
         return '解析错误'
     elif data['名称'].find("-") != -1:
         return '多帧报文'
+    elif data['名称'].find("BSP") != -1:
+        return "BSP-动力蓄电池预留报文"
     dataRaw = int(data['数据(HEX)'].replace(' ',''), 16)      #数据(HEX)
     if data['名称'] in data_js.keys():
         one_frame_analysis(data_js[data['名称']], data[0], data[1], data[2])
-    
 
 '''
  description: 给名称一列赋值
@@ -171,10 +172,9 @@ def set_meaning(df):
     return df
 
 if __name__ == "__main__":
-    global data_js
-    data_js = read_json()
-    csv_df = get_csv_data('BVIN1枪.CSV')
-
+    data_js = read_json('./src/bmsConfig.json')
+    csv_df = get_csv_data('./data/BVIN1枪.CSV')
+    bms_check(data_js)
     csv_df = set_msg_name(csv_df)
     csv_df = set_meaning(csv_df)
 
