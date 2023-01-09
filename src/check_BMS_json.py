@@ -1,5 +1,5 @@
 import math, json
-
+import operator
 
 need_keys = [
     "describe", "PGN", "priority", "total_bytes",
@@ -27,9 +27,10 @@ def bms_check(dic):
             if "bytes/bit" not in dic[key]['data'][cell].keys():
                 print(f"{key} 下的 {cell} 缺少bytes/bit字段")
             for line in necessarykeys: 
-                print(list(set(dic[key]['data'][cell].keys()) & set(line)).sort(), f"{key} 下的 {cell}")
-                if list(set(dic[key]['data'][cell].keys()) & set(line)).sort() != line.sort():
-                    print(f"{key} 下的 {cell} 有不正确字段")
+                find_cell_keys = list(set(dic[key]['data'][cell].keys()) & set(line))
+                if not operator.eq(sorted(find_cell_keys), sorted(line)):
+                    if len(find_cell_keys):
+                        print(f"{key} 下的 {cell} 有不正确字段")
 
 
 
