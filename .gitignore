@@ -1,3 +1,6 @@
-# *.csv
+1.csv
+*译.csv
 *.txt
 *.xlsx
+__pycache__/
+1.py
