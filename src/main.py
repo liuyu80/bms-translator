@@ -12,11 +12,13 @@
  Copyright (C) 2023 liuyu. All rights reserved.
 '''
 
-import json, os, csv, time
+import json, os, re, time
 import pandas as pd
+import tkinter as tk
+from tkinter import filedialog
 from struct import unpack
 from analysis import *
-from check_BMS_json import *
+from check_sys import *
 
 '''多帧报文识别内部变量'''
 more_frame_config = {
@@ -137,12 +139,15 @@ def find_bms_name(pgn, priority, receive_send, dataRaw):
  return {*} 报文名称
 '''
 def param_msg_name(data):
-    id = int(data['帧ID'], 16)               #帧ID
+    if data_check([[data['帧ID'], '^0[xX][A-Fa-f0-9]{8}$|^[A-Fa-f0-9]{8}$'],
+                    [str(data['数据(HEX)']).replace(' ',''), '^[A-Fa-f0-9]+$']]) is False:
+        return 'error'
+    id = int(data['帧ID'], 16)          # 帧ID
     dataRaw = int(data['数据(HEX)'].replace(' ',''), 16)      #数据(HEX)
-    priority = (id >> 4*6) >> 2         #优先级
-    pgn = (id>>4*2) & 0xff00            #获取组编号
+    priority = (id >> 4*6) >> 2         # 优先级
+    pgn = (id>>4*2) & 0xff00            # 获取组编号
     receive_send = (id & 0xffff)
-    # print(f'{pgn:x}, {priority:d}, {receive_send:x}, {dataLength:d}, {dataRaw:x}')
+
     return find_bms_name(pgn, priority, receive_send, dataRaw)
 
 def analysis_dataRaw(data):
@@ -157,27 +162,42 @@ def analysis_dataRaw(data):
     dataRaw = int(data['数据(HEX)'].replace(' ',''), 16)      #数据(HEX)
     if data['名称'] in data_js.keys():
         one_frame_analysis(data_js[data['名称']], data[0], data[1], data[2])
-
+ 
+def data_check(data):
+    for line in data:
+        if re.match(line[1], line[0]) == None:
+            return False
+    if len(data[1][0])%2 != 0:
+        print(data[0][0], data[1][0])
+        return False
+    return True
 '''
  description: 给名称一列赋值
  param {*} df pandas.Dataframe 对象 csv文件的数据
  return {*} pandas.Dataframe
 '''
 def set_msg_name(df):
-    df['名称'] = df.loc[ : , ['帧ID', '数据长度', '数据(HEX)']].apply(param_msg_name, axis=1)
+    df['名称'] = df.loc[ : , ['名称', '帧ID', '数据长度', '数据(HEX)']].apply(param_msg_name, axis=1)
     return df
 
 def set_meaning(df):
-    df['BMS报文翻译'] = df.loc[ :100 , ['名称', '数据长度', '数据(HEX)']].apply(analysis_dataRaw, axis=1)
+    df['BMS报文翻译'] = df.loc[ : , ['名称', '数据长度', '数据(HEX)']].apply(analysis_dataRaw, axis=1)
     return df
 
 if __name__ == "__main__":
+    root = tk.Tk()  # 窗体对象
+    root.withdraw()  # 窗体隐藏
+    path = tk.filedialog.askopenfilename()
+    path_check(path)
+    file_path, file_name = os.path.split(path)  #路径切割, 得到路径和文件名
+
     data_js = read_json('./src/bmsConfig.json')
-    csv_df = get_csv_data('./data/BVIN1枪.CSV')
+    csv_df = get_csv_data(path)
     bms_check(data_js)
     csv_df = set_msg_name(csv_df)
     csv_df = set_meaning(csv_df)
-
-    csv_df.to_csv('1.csv', index =None)
+    translater_file_name = file_name.split('.')[0] + '-译.' + file_name.split('.')[-1]
+    
+    csv_df.to_csv(os.path.join(file_path, translater_file_name), index =None)
     
     
