@@ -1,4 +1,4 @@
-import math, json
+import math, json, os
 import operator
 
 need_keys = [
@@ -11,6 +11,19 @@ necessarykeys = [
     ["ratio", "offset", "unit_symbol"],
     ['components', 'schema']
 ]
+def path_check(path):
+    if path == '':
+        print('路径为空')
+        exit()
+    file_path, file_name = os.path.split(path)
+    name, style = os.path.splitext(file_name)
+    if style not in ('.CSV', '.csv'):
+        print('文件名不正确')
+        exit()
+    if name[-2:] == '-译':
+        print('该文件已翻译, 请选择要翻译的报文文件')
+        exit()
+
 
 def bms_check(dic):
     for key in dic.keys():
@@ -36,8 +49,6 @@ def bms_check(dic):
                     if len(find_cell_keys):
                         print(f"{key} 下的 {cell} 有不正确字段")
 
-
-
 def beal_bytesBit(nums:list):
     if len(nums)> 2:
         print(nums,"大于2")
@@ -56,7 +67,7 @@ def beal_bytesBit(nums:list):
     print(nums,"数据类型不一致")
     return False
 
-def read_json(path = 'bmsConfig·.json'):
+def read_json(path = 'bmsConfig.json'):
     with open(path, "r", encoding='utf-8') as fp:
         data = json.load(fp)
         return (data)
