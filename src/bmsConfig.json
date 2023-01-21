@@ -366,7 +366,7 @@
         "describe": "动力蓄电池状态信息",
         "PGN": "0x1300",
         "priority": 6,
-        "total_bytes": 7,
+        "total_bytes": 8,
         "receive_send": "0x56f4",
         "optional_count": 0,
         "data": {
