@@ -17,7 +17,6 @@ import pandas as pd
 import tkinter as tk
 from tkinter import filedialog
 from struct import unpack
-from analysis import *
 from check_sys import *
 
 '''多帧报文识别内部变量'''
@@ -133,14 +132,25 @@ def find_bms_name(pgn, priority, receive_send, dataRaw):
         return 'error'
     return '非标'
 
+def hex_data_check(data):
+    for line in data:
+        if re.match(line[1], line[0]) == None:
+            return False
+    if len(data[1][0])%2 != 0:
+        print(data[0][0], data[1][0])
+        return False
+    return True
 '''
  description: 解析帧ID 和 格式化报文源数据
  param {*} data pandas.series 对象 csv文件数据
  return {*} 报文名称
 '''
 def param_msg_name(data):
-    if data_check([[data['帧ID'], '^0[xX][A-Fa-f0-9]{8}$|^[A-Fa-f0-9]{8}$'],
-                    [str(data['数据(HEX)']).replace(' ',''), '^[A-Fa-f0-9]+$']]) is False:
+    # 检测 帧ID 和 实际数据 是否为十六进制
+    if hex_data_check([[data['帧ID'], '^0[xX][A-Fa-f0-9]{8}$|^[A-Fa-f0-9]{8}$'],
+                    [str(data['数据(HEX)']).replace(' ',''), '^[A-Fa-f0-9]+$']]) is False:  
+        return 'error'
+    if data['数据长度'] != len(str(data['数据(HEX)']).replace(' ',''))/2:  #检测文件中数据长度和数据实际长度是否一致
         return 'error'
     id = int(data['帧ID'], 16)          # 帧ID
     dataRaw = int(data['数据(HEX)'].replace(' ',''), 16)      #数据(HEX)
@@ -149,6 +159,16 @@ def param_msg_name(data):
     receive_send = (id & 0xffff)
 
     return find_bms_name(pgn, priority, receive_send, dataRaw)
+
+def one_frame_analysis(json_dic, name, length, dataRaw):
+    format_list = [json_dic['total_bytes'], length]  
+    for key in json_dic['data'].keys():
+        if int(json_dic['data'][key]['bytes/bit'][0]) in format_list:
+            continue
+        else:
+            format_list.append(int(json_dic['data'][key]['bytes/bit'][0]))
+    print(format_list, name)
+    pass
 
 def analysis_dataRaw(data):
     if data['名称'].find("非标") != -1:
@@ -161,16 +181,9 @@ def analysis_dataRaw(data):
         return "BSP-动力蓄电池预留报文"
     dataRaw = int(data['数据(HEX)'].replace(' ',''), 16)      #数据(HEX)
     if data['名称'] in data_js.keys():
-        one_frame_analysis(data_js[data['名称']], data[0], data[1], data[2])
+        one_frame_analysis(data_js[data['名称']], data[0], data[1], dataRaw)
  
-def data_check(data):
-    for line in data:
-        if re.match(line[1], line[0]) == None:
-            return False
-    if len(data[1][0])%2 != 0:
-        print(data[0][0], data[1][0])
-        return False
-    return True
+
 '''
  description: 给名称一列赋值
  param {*} df pandas.Dataframe 对象 csv文件的数据
@@ -181,7 +194,7 @@ def set_msg_name(df):
     return df
 
 def set_meaning(df):
-    df['BMS报文翻译'] = df.loc[ : , ['名称', '数据长度', '数据(HEX)']].apply(analysis_dataRaw, axis=1)
+    df['BMS报文翻译'] = df.loc[ :100, ['名称', '数据长度', '数据(HEX)']].apply(analysis_dataRaw, axis=1)
     return df
 
 if __name__ == "__main__":
