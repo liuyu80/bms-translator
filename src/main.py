@@ -161,13 +161,29 @@ def param_msg_name(data):
     return find_bms_name(pgn, priority, receive_send, dataRaw)
 
 def one_frame_analysis(json_dic, name, length, dataRaw):
-    format_list = [json_dic['total_bytes'], length]  
+    format_dic = {
+        'total_bytes': json_dic['total_bytes'],
+        'length': int(length),
+        'format_str': '',
+        "format_list": []
+    }
+    if format_dic['total_bytes'] < format_dic['length']:
+        return '解析错误'
     for key in json_dic['data'].keys():
-        if int(json_dic['data'][key]['bytes/bit'][0]) in format_list:
+        if int(json_dic['data'][key]['bytes/bit'][0]) in format_dic['format_list']:
             continue
         else:
-            format_list.append(int(json_dic['data'][key]['bytes/bit'][0]))
-    print(format_list, name)
+            format_dic['format_list'].append(int(json_dic['data'][key]['bytes/bit'][0]))
+
+    for num ,cell in enumerate(format_dic['format_list']):
+        if cell == format_dic['format_list'][-1]:
+            values = format_dic['length']-format_dic['format_list'][num]+1
+            format_dic['format_str'] += f'{values}s'
+        else:
+            values = format_dic['format_list'][num+1]-format_dic['format_list'][num]
+            format_dic['format_str'] += f'{values}s '
+    
+    return(format_dic['format_list'], format_dic['format_str'], name)
     pass
 
 def analysis_dataRaw(data):
@@ -181,7 +197,7 @@ def analysis_dataRaw(data):
         return "BSP-动力蓄电池预留报文"
     dataRaw = int(data['数据(HEX)'].replace(' ',''), 16)      #数据(HEX)
     if data['名称'] in data_js.keys():
-        one_frame_analysis(data_js[data['名称']], data[0], data[1], dataRaw)
+        return one_frame_analysis(data_js[data['名称']], data[0], data[1], dataRaw)
  
 
 '''
@@ -194,7 +210,7 @@ def set_msg_name(df):
     return df
 
 def set_meaning(df):
-    df['BMS报文翻译'] = df.loc[ :100, ['名称', '数据长度', '数据(HEX)']].apply(analysis_dataRaw, axis=1)
+    df['BMS报文翻译'] = df.loc[ :, ['名称', '数据长度', '数据(HEX)']].apply(analysis_dataRaw, axis=1)
     return df
 
 if __name__ == "__main__":
