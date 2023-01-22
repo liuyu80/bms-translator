@@ -165,15 +165,10 @@ def one_frame_analysis(json_dic, name, length, dataRaw):
         'total_bytes': json_dic['total_bytes'],
         'length': int(length),
         'format_str': '',
-        "format_list": []
+        "format_list": json_dic['format_list']
     }
     if format_dic['total_bytes'] < format_dic['length']:
         return '解析错误'
-    for key in json_dic['data'].keys():
-        if int(json_dic['data'][key]['bytes/bit'][0]) in format_dic['format_list']:
-            continue
-        else:
-            format_dic['format_list'].append(int(json_dic['data'][key]['bytes/bit'][0]))
 
     for num ,cell in enumerate(format_dic['format_list']):
         if cell == format_dic['format_list'][-1]:
@@ -210,6 +205,14 @@ def set_msg_name(df):
     return df
 
 def set_meaning(df):
+    for key_data in data_js.keys():
+        data_js[key_data]['format_list'] = []
+        for key in data_js[key_data]['data'].keys():
+            if int(data_js[key_data]['data'][key]['bytes/bit'][0]) in data_js[key_data]['format_list']:
+                continue
+            else:
+                data_js[key_data]['format_list'].append(int(data_js[key_data]['data'][key]['bytes/bit'][0]))
+                
     df['BMS报文翻译'] = df.loc[ :, ['名称', '数据长度', '数据(HEX)']].apply(analysis_dataRaw, axis=1)
     return df
 
