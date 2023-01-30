@@ -567,7 +567,7 @@
         "describe": "BMS统计数据",
         "PGN": "0x1C00",
         "priority": 6,
-        "total_bytes": 7,
+        "total_bytes": 8,
         "receive_send": "0x56f4",
         "optional_count": 0,
         "data": {
