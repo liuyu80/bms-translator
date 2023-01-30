@@ -7,8 +7,8 @@
  Author       : liuyu
  Date         : 2023-01-07 09:04:55
  LastEditors  : liuyu
- LastEditTime : 2023-01-07 17:31:02
- FilePath     : \\BMS-translator\\main.py
+ LastEditTime : 2023-01-30 10:42:05
+ FilePath     : \\BMS-translator\\src\\main.py
  Copyright (C) 2023 liuyu. All rights reserved.
 '''
 
@@ -16,7 +16,7 @@ import json, os, re, time
 import pandas as pd
 import tkinter as tk
 from tkinter import filedialog
-from struct import unpack
+import struct
 from check_sys import *
 
 '''多帧报文识别内部变量'''
@@ -165,11 +165,15 @@ def one_frame_analysis(json_dic, name, length, dataRaw):
         'total_bytes': json_dic['total_bytes'],
         'length': int(length),
         'format_str': '',
-        "format_list": json_dic['format_list']
+        "format_list": json_dic['format_list'],
+        'name': name,
+        'data': str(dataRaw)
     }
-    if format_dic['total_bytes'] < format_dic['length']:
-        return '解析错误'
-
+    if format_dic['total_bytes']:
+        if format_dic['total_bytes'] < format_dic['length']:
+            return f'解析错误-与配置文件的长度不符 {name}_total_bytes: {format_dic["total_bytes"]}'
+    
+    total_num = 0
     for num ,cell in enumerate(format_dic['format_list']):
         if cell == format_dic['format_list'][-1]:
             values = format_dic['length']-format_dic['format_list'][num]+1
@@ -177,9 +181,19 @@ def one_frame_analysis(json_dic, name, length, dataRaw):
         else:
             values = format_dic['format_list'][num+1]-format_dic['format_list'][num]
             format_dic['format_str'] += f'{values}s '
-    
-    return(format_dic['format_list'], format_dic['format_str'], name)
-    pass
+        total_num += values
+    if total_num != format_dic['length']:
+        return f'解析错误-解析匹配字符长度不符 {format_dic["format_str"]}'
+    else:
+        print(dataRaw)
+        data = int(format_dic['data'].replace(' ',''), 16).to_bytes(format_dic['length'], byteorder="big", signed=False)
+        pack = list(struct.unpack(format_dic['format_str'], data))
+        for index in range(len(pack)):
+            pack[index] = int.from_bytes(pack[index], 'little')
+
+        
+        return pack
+
 
 def analysis_dataRaw(data):
     if data['名称'].find("非标") != -1:
@@ -190,9 +204,9 @@ def analysis_dataRaw(data):
         return '多帧报文'
     elif data['名称'].find("BSP") != -1:
         return "BSP-动力蓄电池预留报文"
-    dataRaw = int(data['数据(HEX)'].replace(' ',''), 16)      #数据(HEX)
+    
     if data['名称'] in data_js.keys():
-        return one_frame_analysis(data_js[data['名称']], data[0], data[1], dataRaw)
+        return one_frame_analysis(data_js[data['名称']], data[0], data[1], data['数据(HEX)'])
  
 
 '''
@@ -212,7 +226,16 @@ def set_meaning(df):
                 continue
             else:
                 data_js[key_data]['format_list'].append(int(data_js[key_data]['data'][key]['bytes/bit'][0]))
-                
+
+    for key_data in data_js.keys():
+        for key in data_js[key_data]['data'].keys():
+            if "options" in data_js[key_data]['data'][key].keys():
+                options = data_js[key_data]['data'][key]['options'].replace(' ','').split(';')
+                data_js[key_data]['data'][key]['options'] = {}
+                for cell in options:
+                    key_dic, values = cell.split(':')
+                    data_js[key_data]['data'][key]['options'][key_dic] = values
+
     df['BMS报文翻译'] = df.loc[ :, ['名称', '数据长度', '数据(HEX)']].apply(analysis_dataRaw, axis=1)
     return df
 
