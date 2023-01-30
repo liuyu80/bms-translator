@@ -7,7 +7,7 @@
  Author       : liuyu
  Date         : 2023-01-07 09:04:55
  LastEditors  : liuyu
- LastEditTime : 2023-01-30 17:47:26
+ LastEditTime : 2023-01-30 18:01:39
  FilePath     : \\BMS-translator\\src\\main.py
  Copyright (C) 2023 liuyu. All rights reserved.
 '''
@@ -188,8 +188,12 @@ def bytes_translation(json_dic, format_dic, key, byte):
                 text += f"{key}: 无; "
     # 组合体翻译
     elif 'components' in json_dic['data'][key].keys():
-        for com in json_dic['data'][key]['components']:
-            pass
+        components = json_dic['data'][key]['components']
+        if isinstance(components[0]["bytes/bit"][0], int):
+            for com in components:
+                
+                
+                pass
     if text == '':
         text = f'{key}: 未解析'
     return text
