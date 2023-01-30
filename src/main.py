@@ -7,11 +7,11 @@
  Author       : liuyu
  Date         : 2023-01-07 09:04:55
  LastEditors  : liuyu
- LastEditTime : 2023-01-30 10:42:05
+ LastEditTime : 2023-01-30 14:08:37
  FilePath     : \\BMS-translator\\src\\main.py
  Copyright (C) 2023 liuyu. All rights reserved.
 '''
-
+from decimal import Decimal
 import json, os, re, time
 import pandas as pd
 import tkinter as tk
@@ -160,14 +160,62 @@ def param_msg_name(data):
 
     return find_bms_name(pgn, priority, receive_send, dataRaw)
 
+def bytes_translation(index, json_dic, format_dic, key, pack):
+    text = ''
+    # 选项翻译
+    if 'options' in json_dic['data'][key].keys():
+        if str(pack[index]) in json_dic['data'][key]['options'].keys():
+            text += f"{key}: {json_dic['data'][key]['options'][str(pack[index])]}; " 
+    # 比率 偏移量 计算 翻译       
+    if 'ratio' in json_dic['data'][key].keys():
+        values = Decimal(str(pack[index])) * Decimal(str(json_dic['data'][key]['ratio'])) + Decimal(str(json_dic['data'][key]['offset']))
+        text += f"{key}: {values}{json_dic['data'][key]['unit_symbol']}; "
+    # 根据类型进行翻译
+    if "type" in json_dic['data'][key].keys():
+        if json_dic['data'][key]['type'] == "int":
+            text += f"{key}: {pack[index]}; "
+        if json_dic['data'][key]['type'] == "ascii":
+            range_list = json_dic['data'][key]["bytes/bit"]
+            ascii_str = format_dic['data'][range_list[0]: range_list[0] + (range_list[1]+1)*2].replace(' ', '')
+            if ascii_str.lower() not in ['ffffff', ]:   #充电机所在区域编码
+                text += f"{key}: "
+                for cell in cut(ascii_str, 2):
+                    text += f"{chr(int(cell, 16))}"
+                text += '; '
+            else: 
+                text += f"{key}: 无; "
+    # 组合体翻译
+    if 'components' in json_dic['data'][key].keys():
+        for com in json_dic['data'][key]['components']:
+            pass
+    return text
+
+def bit_translation():
+    pass
+
+def translation_fun(json_dic, format_dic, data_keys, pack) ->str:
+    text = format_dic['tran_text']
+    for index in range(len(pack)):
+        key = data_keys[index]
+        pack[index] = int.from_bytes(pack[index], 'little')
+        if isinstance(json_dic['data'][key]['bytes/bit'][1], int):
+            text += bytes_translation(index, json_dic, format_dic, key, pack)
+        # else:
+        #     text += bit_translation()
+    return text
+
+def cut(obj, sec):
+    return [obj[i:i+sec] for i in range(0,len(obj),sec)]
+
 def one_frame_analysis(json_dic, name, length, dataRaw):
     format_dic = {
         'total_bytes': json_dic['total_bytes'],
         'length': int(length),
         'format_str': '',
         "format_list": json_dic['format_list'],
+        'data': str(dataRaw),
         'name': name,
-        'data': str(dataRaw)
+        'tran_text': f'{name}报文 '
     }
     if format_dic['total_bytes']:
         if format_dic['total_bytes'] < format_dic['length']:
@@ -185,14 +233,14 @@ def one_frame_analysis(json_dic, name, length, dataRaw):
     if total_num != format_dic['length']:
         return f'解析错误-解析匹配字符长度不符 {format_dic["format_str"]}'
     else:
-        print(dataRaw)
+        data_keys = list(json_dic['data'].keys())
         data = int(format_dic['data'].replace(' ',''), 16).to_bytes(format_dic['length'], byteorder="big", signed=False)
         pack = list(struct.unpack(format_dic['format_str'], data))
-        for index in range(len(pack)):
-            pack[index] = int.from_bytes(pack[index], 'little')
-
         
-        return pack
+        format_dic['tran_text'] = translation_fun(json_dic, format_dic, data_keys, pack)
+        
+        return format_dic['tran_text']
+
 
 
 def analysis_dataRaw(data):
@@ -232,9 +280,18 @@ def set_meaning(df):
             if "options" in data_js[key_data]['data'][key].keys():
                 options = data_js[key_data]['data'][key]['options'].replace(' ','').split(';')
                 data_js[key_data]['data'][key]['options'] = {}
-                for cell in options:
-                    key_dic, values = cell.split(':')
-                    data_js[key_data]['data'][key]['options'][key_dic] = values
+                if isinstance(data_js[key_data]['data'][key]['bytes/bit'][1], int):
+                    s_str = '0x'
+                    for cell in options:
+                        key_dic, values = cell.split(':')
+                        key_dic = str(int((s_str + key_dic), 16))
+                        data_js[key_data]['data'][key]['options'][key_dic] = values
+                else: 
+                    s_str = '0b'
+                    for cell in options:
+                        key_dic, values = cell.split(':')
+                        key_dic = str(int((s_str + key_dic), 2))
+                        data_js[key_data]['data'][key]['options'][key_dic] = values
 
     df['BMS报文翻译'] = df.loc[ :, ['名称', '数据长度', '数据(HEX)']].apply(analysis_dataRaw, axis=1)
     return df
