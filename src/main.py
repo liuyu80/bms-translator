@@ -189,6 +189,7 @@ def bytes_translation(json_dic, format_dic, key, byte):
     # 组合体翻译
     elif 'components' in json_dic['data'][key].keys():
         print(len(hex(byte)), hex(byte), format_dic['name'], key)
+        
         components = json_dic['data'][key]['components']
         if isinstance(components[0]["bytes/bit"][0], int):
             for com in components:
@@ -201,7 +202,7 @@ def bytes_translation(json_dic, format_dic, key, byte):
 
 def bit_translation(flag_key, json_dic, format_dic, data_keys, byte):
     text = ''
-    bit_fun_str = str(bit_overturn(byte))
+    bit_fun_str = str(bit_overturn(bin(byte)))
     byte_range = [int(json_dic['data'][flag_key]['bytes/bit'][0]), len(bit_fun_str)]
     key = flag_key
 
@@ -210,7 +211,7 @@ def bit_translation(flag_key, json_dic, format_dic, data_keys, byte):
 
     bit_str = bit_fun_str[range_list[0]: range_list[1]]
     if bit_str == '' or format_dic['name'] == 'BSM':
-        print(bit_str, key, range_list, bit_overturn(byte))
+        print(bit_str, key, range_list, bit_overturn(bin(byte)))
     if 'options' in json_dic['data'][key].keys():  
         # print(bit_str, key, range_list, bit_overturn(byte))
         if str(int(bit_str, 2)) in json_dic['data'][key]['options'].keys():
@@ -238,10 +239,10 @@ def translation_fun(json_dic, format_dic, data_keys, pack) ->str:
         elif isinstance(json_dic['data'][key]['bytes/bit'][1], float):
             text += bit_translation(key, json_dic, format_dic, data_keys, pack[index])
             
-    return text[:-2]
+    return text[:-2]  # 去掉翻译后最后一个;
 
 def bit_overturn(obj) -> str:
-    obj = bin(obj)
+    
     s_list = [(obj)[i:i+2] for i in range(2,len(obj),2)]
     s_str =  ''.join(s_list[::-1])
     if s_str == '0':
