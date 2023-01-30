@@ -374,7 +374,7 @@
                 "bytes/bit": [1, 1],
                 "ratio": 1,
                 "offset": 1,
-                "unit_symbol": "编号"
+                "unit_symbol": "号"
             },
             "最高动力蓄电池温度": {
                 "bytes/bit": [2, 1],
@@ -386,7 +386,7 @@
                 "bytes/bit": [3,1],
                 "ratio": 1,
                 "offset": 1,
-                "unit_symbol": "编号"
+                "unit_symbol": "号"
             },
             "最低动力蓄电池温度": {
                 "bytes/bit": [4,1],
@@ -398,7 +398,7 @@
                 "bytes/bit": [5, 1],
                 "ratio": 1,
                 "offset": 1,
-                "unit_symbol": "编号"
+                "unit_symbol": "号"
             },
             "单体动力蓄电池电压过高/过低": {
                 "bytes/bit": [6.1, 0.2],
