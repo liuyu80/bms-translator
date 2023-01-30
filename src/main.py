@@ -188,6 +188,7 @@ def bytes_translation(json_dic, format_dic, key, byte):
                 text += f"{key}: 无; "
     # 组合体翻译
     elif 'components' in json_dic['data'][key].keys():
+        print(len(hex(byte)), hex(byte), format_dic['name'], key)
         components = json_dic['data'][key]['components']
         if isinstance(components[0]["bytes/bit"][0], int):
             for com in components:
@@ -195,7 +196,7 @@ def bytes_translation(json_dic, format_dic, key, byte):
                 
                 pass
     if text == '':
-        text = f'{key}: 未解析'
+        text = f'{key}: 未解析; '
     return text
 
 def bit_translation(flag_key, json_dic, format_dic, data_keys, byte):
@@ -222,7 +223,7 @@ def bit_translation(flag_key, json_dic, format_dic, data_keys, byte):
         text += f"{key}: {values}{json_dic['data'][key]['unit_symbol']}; "
         format_dic['tran_nums'][key] = True
     if text == '':
-        text = f'{key}: 未解析'   
+        text = f'{key}: 未解析; '   
     else:
         return text
     
@@ -237,7 +238,7 @@ def translation_fun(json_dic, format_dic, data_keys, pack) ->str:
         elif isinstance(json_dic['data'][key]['bytes/bit'][1], float):
             text += bit_translation(key, json_dic, format_dic, data_keys, pack[index])
             
-    return text
+    return text[:-2]
 
 def bit_overturn(obj) -> str:
     obj = bin(obj)
@@ -286,7 +287,7 @@ def one_frame_analysis(json_dic, name, length, dataRaw):
         
         format_dic['tran_text'] = translation_fun(json_dic, format_dic, data_keys, pack)
         
-        return format_dic['tran_text']
+        return (pack, format_dic['format_str'], format_dic['tran_text'], )
 
 def analysis_dataRaw(data):
     if data['名称'].find("非标") != -1:
