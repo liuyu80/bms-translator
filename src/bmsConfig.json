@@ -90,9 +90,9 @@
             "电池组生产日期": {
                 "bytes/bit": [17, 3],
                 "components": [
-                    {"bytes/bit": [17, 1], "ratio": 1, "offset": 1985, "unit_symbol": null},
-                    {"bytes/bit": [18, 1], "type":1},
-                    {"bytes/bit": [19, 1], "type":1}
+                    {"bytes/bit": [17, 1], "ratio": 1, "offset": 1985, "unit_symbol": ""},
+                    {"bytes/bit": [18, 1], "ratio": 1, "offset": 0, "unit_symbol": ""},
+                    {"bytes/bit": [19, 1], "ratio": 1, "offset": 0, "unit_symbol": ""}
                 ],
                 "schema": [1, "~年~月~日"]
             },
