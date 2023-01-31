@@ -7,7 +7,7 @@
  Author       : liuyu
  Date         : 2023-01-07 09:04:55
  LastEditors  : liuyu
- LastEditTime : 2023-01-31 11:40:43
+ LastEditTime : 2023-01-31 12:24:48
  FilePath     : \\BMS-translator\\src\\main.py
  Copyright (C) 2023 liuyu. All rights reserved.
 '''
@@ -240,7 +240,6 @@ def bit_translation(json_dic, key, byte, bit_Lenthg, range_list):
     range_list = [int(str(range_list[0])[-1])-1, int(str(range_list[1])[-1])+int(str(range_list[0])[-1])-1]
 
     bit_str = bit_fun_str[range_list[0]: range_list[1]]
-    
     if 'options' in json_dic.keys():  
         # print(bit_str, key, range_list, bit_overturn(byte))
         if str(int(bit_str, 2)) in json_dic['options'].keys():
@@ -266,7 +265,7 @@ def translation_fun(json_dic, format_dic, data_keys, pack) ->str:
             text += bytes_translation(json_dic['data'][key], format_dic, key, pack[index])
             
         elif isinstance(json_dic['data'][key]['bytes/bit'][1], float):
-            bit_Lenthg = format_dic['format_str'].split(' ')[index][0]
+            bit_Lenthg = int(format_dic['format_str'].split(' ')[index][0]) * 8
             text += bit_translation(json_dic['data'][key], key, pack[index], bit_Lenthg, [])
             
     return text[:-2]  # 去掉翻译后最后一个;
@@ -319,7 +318,8 @@ def one_frame_analysis(json_dic, name, length, dataRaw):
         
         format_dic['tran_text'] = translation_fun(json_dic, format_dic, data_keys, pack)
         
-        return (pack, format_dic['format_str'], format_dic['tran_text'], )
+        # return (pack, format_dic['format_str'], format_dic['tran_text'], )
+        return format_dic['tran_text']
 
 def analysis_dataRaw(data):
     if data['名称'].find("非标") != -1:
