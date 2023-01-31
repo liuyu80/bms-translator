@@ -627,7 +627,7 @@
                 "bytes/bit": [3, 2],
                 "ratio": 0.01,
                 "offset": 0,
-                "unit_symbol": "V"
+                "unit_symbol": "kW*h"
             },
             "充电机编号": {
                 "bytes/bit": [5, 4],
