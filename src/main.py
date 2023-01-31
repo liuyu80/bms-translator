@@ -7,7 +7,7 @@
  Author       : liuyu
  Date         : 2023-01-07 09:04:55
  LastEditors  : liuyu
- LastEditTime : 2023-01-31 12:24:48
+ LastEditTime : 2023-01-31 15:21:00
  FilePath     : \\BMS-translator\\src\\main.py
  Copyright (C) 2023 liuyu. All rights reserved.
 '''
@@ -160,7 +160,7 @@ def param_msg_name(data):
 
     return find_bms_name(pgn, priority, receive_send, dataRaw)
 
-def bytes_translation(json_dic, format_dic, key, byte):
+def bytes_translation(json_dic, format_dic, key, byte, index):
     text = ''
     # 选项翻译
     if 'options' in json_dic.keys():
@@ -215,7 +215,7 @@ def bytes_translation(json_dic, format_dic, key, byte):
                 s_data = s_str[(com['bytes/bit'][0]-1)*2: (com['bytes/bit'][1]+com['bytes/bit'][0]-1)*2]
                 if len(s_data) > 2:
                     s_data = bit_overturn("xx"+ s_data, com['bytes/bit'][1]*2)
-                cell = bytes_translation(com, format_dic, None, s_data)
+                cell = bytes_translation(com, format_dic, None, s_data, index)
                 cell_list.append(cell)
             way = int(json_dic['schema'][0])
             tran_packs = json_dic['schema'][1].split('~')
@@ -223,10 +223,20 @@ def bytes_translation(json_dic, format_dic, key, byte):
             for cell, pack in zip(cell_list[::way], tran_packs[:-1]):
                 text += f"{pack}{cell}"
             text += f"{tran_packs[-1]}; "
-            print('components', cell_list, text, format_dic['name'], key)
+            # print('components', cell_list, text, format_dic['name'], key)
         elif isinstance(components[0]["bytes/bit"][0], float):
-            text += f"{key}: 未解析; "
-
+            for com in components:
+                bit_Lenthg = int(format_dic['format_str'].split(' ')[index][0]) * 8
+                range_list = com['bytes/bit']
+                byte_start = hexToBit(range_list[0]) - hexToBit(data_js[format_dic['name']]['format_list'][index]) - 1 
+                byte_end = byte_start + int(str(range_list[1]).split('.')[1])
+                print(None, byte, bit_Lenthg, [byte_start, byte_end], format_dic['name'], key)
+                cell_list.append(bit_translation(com, None, byte, bit_Lenthg, [byte_start, byte_end]))
+            text += str(cell_list) + '; '
+                
+            # text += f"{key}: 未解析; "
+        else:
+            text += f"{key}: 错误; "
     if text == '':
         text = f'{key}: 未解析; '
     return text
@@ -234,24 +244,30 @@ def bytes_translation(json_dic, format_dic, key, byte):
 def bit_translation(json_dic, key, byte, bit_Lenthg, range_list):
     text = ''
     bit_fun_str = str(bit_overturn(bin(byte), bit_Lenthg))
-    byte_range = [int(json_dic['bytes/bit'][0]), len(bit_fun_str)]
-
-    range_list = json_dic['bytes/bit']
-    range_list = [int(str(range_list[0])[-1])-1, int(str(range_list[1])[-1])+int(str(range_list[0])[-1])-1]
 
     bit_str = bit_fun_str[range_list[0]: range_list[1]]
+    # print(bit_str, bit_fun_str, str(int(bit_str, 2)))
     if 'options' in json_dic.keys():  
         # print(bit_str, key, range_list, bit_overturn(byte))
         if str(int(bit_str, 2)) in json_dic['options'].keys():
-            text += f"{key}: {json_dic['options'][str(int(bit_str, 2))]}; " 
+            if key:
+                text += f"{key}: {json_dic['options'][str(int(bit_str, 2))]}; " 
+            else:
+                return json_dic['options'][str(int(bit_str, 2))]
         else:
             return f"解析错误-{key}options"
     elif 'ratio' in json_dic.keys():
         values = Decimal(bit_str) * Decimal(str(json_dic['ratio'])) + Decimal(str(json_dic['offset']))
-        text += f"{key}: {values}{json_dic['unit_symbol']}; "
-
+        if key:
+            text += f"{key}: {values}{json_dic['unit_symbol']}; "
+        else: 
+            return f"{values}{json_dic['unit_symbol']}"
+    
     if text == '':
-        text = f'{key}: 未解析; '   
+        if key:
+            text = f'{key}: 未解析; ' 
+        else:
+            return '未解析'
     else:
         return text
     
@@ -262,13 +278,35 @@ def translation_fun(json_dic, format_dic, data_keys, pack) ->str:
         key = data_keys[index]
         pack[index] = int.from_bytes(pack[index], 'little')
         if isinstance(json_dic['data'][key]['bytes/bit'][1], int):
-            text += bytes_translation(json_dic['data'][key], format_dic, key, pack[index])
+            text += bytes_translation(json_dic['data'][key], format_dic, key, pack[index], index)
             
         elif isinstance(json_dic['data'][key]['bytes/bit'][1], float):
             bit_Lenthg = int(format_dic['format_str'].split(' ')[index][0]) * 8
-            text += bit_translation(json_dic['data'][key], key, pack[index], bit_Lenthg, [])
+            range_list = json_dic['data'][key]['bytes/bit']
+            byte_start = hexToBit(range_list[0]) - hexToBit(data_js[format_dic['name']]['format_list'][index]) - 1 
+            byte_end = byte_start + int(str(range_list[1]).split('.')[1])
+            
+            text += bit_translation(json_dic['data'][key], key, pack[index], bit_Lenthg, [byte_start, byte_end])
+        else:
+            return f"json_error {son_dic['data'][key]['bytes/bit']}, {format_dic['format_str']}, {format_dic['name']}"
             
     return text[:-2]  # 去掉翻译后最后一个;
+
+def hexToBit(num:str) -> int:
+    if isinstance(num, float) :
+        str_nums = str(num).split('.')
+        if len(str_nums[1]) != 1 or int(str_nums[1]) >= 8:
+            print('数据有问题！')
+        else:
+            return int(str_nums[0]) * 8 + int(str_nums[1])
+    elif isinstance(num, int):
+        return num * 8
+    elif '.' in num:
+        str_nums = str(num).split('.')
+        if len(str_nums[1]) != 1 or int(str_nums[1]) >= 8:
+            print('数据有问题！')
+        else:
+            return int(str_nums[0]) * 8 + int(str_nums[1])
 
 def bit_overturn(obj, num) -> str:
     
@@ -370,6 +408,7 @@ def set_meaning(df):
                         key_dic, values = cell.split(':')
                         key_dic = str(int((s_str + key_dic), 2))
                         data_js[key_data]['data'][key]['options'][key_dic] = values
+     
 
     df['BMS报文翻译'] = df.loc[ :, ['名称', '数据长度', '数据(HEX)']].apply(analysis_dataRaw, axis=1)
     return df
