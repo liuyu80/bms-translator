@@ -12,7 +12,7 @@
  Copyright (C) 2023 liuyu. All rights reserved.
 '''
 from decimal import Decimal
-import json, os, re, time
+import json, os, re, time, math
 import pandas as pd
 import tkinter as tk
 from tkinter import filedialog
@@ -59,7 +59,7 @@ def get_csv_data(path):
     csv_df = csv_df.reindex(columns=header)
 
     # csv_df['时间标识'] = create_time + csv_df['时间标识']
-    # print(csv_df.head())
+
     return csv_df
 
 '''
@@ -137,7 +137,6 @@ def hex_data_check(data):
         if re.match(line[1], line[0]) == None:
             return False
     if len(data[1][0])%2 != 0:
-        print(data[0][0], data[1][0])
         return False
     return True
 '''
@@ -206,9 +205,9 @@ def bytes_translation(json_dic, format_dic, key, byte, index):
                     return '无'
     # 组合体翻译
     elif 'components' in json_dic.keys():
-        # print(json_dic["bytes/bit"][1], hex(byte), format_dic['name'], key)
         components = json_dic['components']
         cell_list = []
+        # 字节组合体翻译
         if isinstance(components[0]["bytes/bit"][0], int):
             s_str = bit_overturn(hex(byte), (json_dic["bytes/bit"][1])*2)
             for com in components:
@@ -217,28 +216,31 @@ def bytes_translation(json_dic, format_dic, key, byte, index):
                     s_data = bit_overturn("xx"+ s_data, com['bytes/bit'][1]*2)
                 cell = bytes_translation(com, format_dic, None, s_data, index)
                 cell_list.append(cell)
-            way = int(json_dic['schema'][0])
-            tran_packs = json_dic['schema'][1].split('~')
-            text += f'{key}: '
-            for cell, pack in zip(cell_list[::way], tran_packs[:-1]):
-                text += f"{pack}{cell}"
-            text += f"{tran_packs[-1]}; "
-            # print('components', cell_list, text, format_dic['name'], key)
+            text += schema_to_str(json_dic['schema'], cell_list, key)
+        # bit组合体翻译
         elif isinstance(components[0]["bytes/bit"][0], float):
             for com in components:
                 bit_Lenthg = int(format_dic['format_str'].split(' ')[index][0]) * 8
                 range_list = com['bytes/bit']
                 byte_start = hexToBit(range_list[0]) - hexToBit(data_js[format_dic['name']]['format_list'][index]) - 1 
                 byte_end = byte_start + int(str(range_list[1]).split('.')[1])
-                print(None, byte, bit_Lenthg, [byte_start, byte_end], format_dic['name'], key)
                 cell_list.append(bit_translation(com, None, byte, bit_Lenthg, [byte_start, byte_end]))
-            text += str(cell_list) + '; '
-                
-            # text += f"{key}: 未解析; "
+            text += schema_to_str(json_dic['schema'], cell_list, key)
         else:
             text += f"{key}: 错误; "
     if text == '':
         text = f'{key}: 未解析; '
+    return str(text)
+
+def schema_to_str(schema, cell_list, key):
+    text = ''
+    way = int(schema[0])
+    tran_packs = schema[1].split('~')
+    text += f'{key}: '
+    for cell, pack in zip(cell_list[::way], tran_packs[:-1]):
+        text += f'{pack}{cell}'
+    text += f'{tran_packs[-1]}; '
+
     return text
 
 def bit_translation(json_dic, key, byte, bit_Lenthg, range_list):
@@ -246,9 +248,9 @@ def bit_translation(json_dic, key, byte, bit_Lenthg, range_list):
     bit_fun_str = str(bit_overturn(bin(byte), bit_Lenthg))
 
     bit_str = bit_fun_str[range_list[0]: range_list[1]]
-    # print(bit_str, bit_fun_str, str(int(bit_str, 2)))
+    
     if 'options' in json_dic.keys():  
-        # print(bit_str, key, range_list, bit_overturn(byte))
+        
         if str(int(bit_str, 2)) in json_dic['options'].keys():
             if key:
                 text += f"{key}: {json_dic['options'][str(int(bit_str, 2))]}; " 
@@ -288,7 +290,7 @@ def translation_fun(json_dic, format_dic, data_keys, pack) ->str:
             
             text += bit_translation(json_dic['data'][key], key, pack[index], bit_Lenthg, [byte_start, byte_end])
         else:
-            return f"json_error {son_dic['data'][key]['bytes/bit']}, {format_dic['format_str']}, {format_dic['name']}"
+            return f"json_error {json_dic['data'][key]['bytes/bit']}, {format_dic['format_str']}, {format_dic['name']}"
             
     return text[:-2]  # 去掉翻译后最后一个;
 
@@ -341,23 +343,22 @@ def one_frame_analysis(json_dic, name, length, dataRaw):
     total_num = 0
     for num ,cell in enumerate(format_dic['format_list']):
         if cell == format_dic['format_list'][-1]:
-            values = format_dic['length']-format_dic['format_list'][num]+1
+            values = list(json_dic['data'].keys())
+            values = math.ceil(json_dic['data'][values[-1]]['bytes/bit'][1])
             format_dic['format_str'] += f'{values}s'
         else:
             values = format_dic['format_list'][num+1]-format_dic['format_list'][num]
             format_dic['format_str'] += f'{values}s '
         total_num += values
-    if total_num != format_dic['length']:
-        return f'解析错误-解析匹配字符长度不符 {format_dic["format_str"]}'
-    else:
-        data_keys = list(json_dic['data'].keys())
-        data = int(format_dic['data'].replace(' ',''), 16).to_bytes(format_dic['length'], byteorder="big", signed=False)
-        pack = list(struct.unpack(format_dic['format_str'], data))
-        
-        format_dic['tran_text'] = translation_fun(json_dic, format_dic, data_keys, pack)
-        
-        # return (pack, format_dic['format_str'], format_dic['tran_text'], )
-        return format_dic['tran_text']
+
+    data_keys = list(json_dic['data'].keys())
+    format_dic['data'] = format_dic['data'].replace(' ','')[:total_num*2]
+    data = int(format_dic['data'], 16).to_bytes(total_num, byteorder="big", signed=False)
+    pack = list(struct.unpack(format_dic['format_str'], data))
+    
+    format_dic['tran_text'] = translation_fun(json_dic, format_dic, data_keys, pack)
+    return (pack,format_dic['format_list'],format_dic['format_str'],  format_dic['tran_text'])
+    # return format_dic['tran_text']
 
 def analysis_dataRaw(data):
     if data['名称'].find("非标") != -1:
@@ -394,24 +395,35 @@ def set_meaning(df):
     for key_data in data_js.keys():
         for key in data_js[key_data]['data'].keys():
             if "options" in data_js[key_data]['data'][key].keys():
-                options = data_js[key_data]['data'][key]['options'].replace(' ','').split(';')
-                data_js[key_data]['data'][key]['options'] = {}
-                if isinstance(data_js[key_data]['data'][key]['bytes/bit'][1], int):
-                    s_str = '0x'
-                    for cell in options:
-                        key_dic, values = cell.split(':')
-                        key_dic = str(int((s_str + key_dic), 16))
-                        data_js[key_data]['data'][key]['options'][key_dic] = values
-                else: 
-                    s_str = '0b'
-                    for cell in options:
-                        key_dic, values = cell.split(':')
-                        key_dic = str(int((s_str + key_dic), 2))
-                        data_js[key_data]['data'][key]['options'][key_dic] = values
-     
+                data_js[key_data]['data'][key]['options'] = options_to_dic(data_js[key_data]['data'][key]['options'], data_js[key_data]['data'][key]['bytes/bit'][1])
+                
+            if 'components' in data_js[key_data]['data'][key].keys():
+                for index in range(len(data_js[key_data]['data'][key]['components'])):
+                    if 'options' in data_js[key_data]['data'][key]['components'][index].keys():
+                        data_js[key_data]['data'][key]['components'][index]['options'] = \
+                            options_to_dic(data_js[key_data]['data'][key]['components'][index]['options'],
+                                data_js[key_data]['data'][key]['components'][index]['bytes/bit'][1]
+                            )
 
     df['BMS报文翻译'] = df.loc[ :, ['名称', '数据长度', '数据(HEX)']].apply(analysis_dataRaw, axis=1)
     return df
+
+def options_to_dic(s_options, is_intNum):
+    options = s_options.replace(' ','').split(';')
+    options_dic = {}
+    if isinstance(is_intNum, int):
+        s_str = '0x'
+        for cell in options:
+            key_dic, values = cell.split(':')
+            key_dic = str(int((s_str + key_dic), 16))
+            options_dic[key_dic] = values
+    else: 
+        s_str = '0b'
+        for cell in options:
+            key_dic, values = cell.split(':')
+            key_dic = str(int((s_str + key_dic), 2))
+            options_dic[key_dic] = values
+    return  options_dic
 
 if __name__ == "__main__":
     root = tk.Tk()  # 窗体对象
