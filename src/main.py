@@ -7,7 +7,7 @@
  Author       : liuyu
  Date         : 2023-01-07 09:04:55
  LastEditors  : liuyu
- LastEditTime : 2023-01-31 11:20:23
+ LastEditTime : 2023-01-31 11:40:43
  FilePath     : \\BMS-translator\\src\\main.py
  Copyright (C) 2023 liuyu. All rights reserved.
 '''
@@ -19,7 +19,7 @@ from tkinter import filedialog
 import struct
 from check_sys import *
 
-'''多帧报文识别内部变量'''
+'''多帧报文名称识别内部变量'''
 more_frame_config = {
     'name': '',
     'reply': False,
@@ -231,29 +231,26 @@ def bytes_translation(json_dic, format_dic, key, byte):
         text = f'{key}: 未解析; '
     return text
 
-def bit_translation(flag_key, json_dic, format_dic, data_keys, byte):
+def bit_translation(json_dic, key, byte, bit_Lenthg, range_list):
     text = ''
-    bit_fun_str = str(bit_overturn(bin(byte), 8))
-    byte_range = [int(json_dic['data'][flag_key]['bytes/bit'][0]), len(bit_fun_str)]
-    key = flag_key
+    bit_fun_str = str(bit_overturn(bin(byte), bit_Lenthg))
+    byte_range = [int(json_dic['bytes/bit'][0]), len(bit_fun_str)]
 
-    range_list = json_dic['data'][key]['bytes/bit']
+    range_list = json_dic['bytes/bit']
     range_list = [int(str(range_list[0])[-1])-1, int(str(range_list[1])[-1])+int(str(range_list[0])[-1])-1]
 
     bit_str = bit_fun_str[range_list[0]: range_list[1]]
-    if bit_str == '' or format_dic['name'] == 'BSM':
-        print(bit_str, key, range_list, bit_overturn(bin(byte), 8))
-    if 'options' in json_dic['data'][key].keys():  
+    
+    if 'options' in json_dic.keys():  
         # print(bit_str, key, range_list, bit_overturn(byte))
-        if str(int(bit_str, 2)) in json_dic['data'][key]['options'].keys():
-            text += f"{key}: {json_dic['data'][key]['options'][str(int(bit_str, 2))]}; " 
-            format_dic['tran_nums'][key] = True
+        if str(int(bit_str, 2)) in json_dic['options'].keys():
+            text += f"{key}: {json_dic['options'][str(int(bit_str, 2))]}; " 
         else:
             return f"解析错误-{key}options"
-    elif 'ratio' in json_dic['data'][key].keys():
-        values = Decimal(bit_str) * Decimal(str(json_dic['data'][key]['ratio'])) + Decimal(str(json_dic['data'][key]['offset']))
-        text += f"{key}: {values}{json_dic['data'][key]['unit_symbol']}; "
-        format_dic['tran_nums'][key] = True
+    elif 'ratio' in json_dic.keys():
+        values = Decimal(bit_str) * Decimal(str(json_dic['ratio'])) + Decimal(str(json_dic['offset']))
+        text += f"{key}: {values}{json_dic['unit_symbol']}; "
+
     if text == '':
         text = f'{key}: 未解析; '   
     else:
@@ -261,6 +258,7 @@ def bit_translation(flag_key, json_dic, format_dic, data_keys, byte):
     
 def translation_fun(json_dic, format_dic, data_keys, pack) ->str:
     text = format_dic['tran_text']
+
     for index in range(len(pack)):
         key = data_keys[index]
         pack[index] = int.from_bytes(pack[index], 'little')
@@ -268,7 +266,8 @@ def translation_fun(json_dic, format_dic, data_keys, pack) ->str:
             text += bytes_translation(json_dic['data'][key], format_dic, key, pack[index])
             
         elif isinstance(json_dic['data'][key]['bytes/bit'][1], float):
-            text += bit_translation(key, json_dic, format_dic, data_keys, pack[index])
+            bit_Lenthg = format_dic['format_str'].split(' ')[index][0]
+            text += bit_translation(json_dic['data'][key], key, pack[index], bit_Lenthg, [])
             
     return text[:-2]  # 去掉翻译后最后一个;
 
@@ -296,8 +295,7 @@ def one_frame_analysis(json_dic, name, length, dataRaw):
         "format_list": json_dic['format_list'],
         'data': str(dataRaw),
         'name': name,
-        'tran_text': f'{name}报文 ',
-        'tran_nums': {}
+        'tran_text': f'{name}报文-> ',
     }
     if format_dic['total_bytes']:
         if format_dic['total_bytes'] < format_dic['length']:
