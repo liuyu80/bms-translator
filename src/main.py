@@ -7,7 +7,7 @@
  Author       : liuyu
  Date         : 2023-01-07 09:04:55
  LastEditors  : liuyu
- LastEditTime : 2023-01-30 18:01:39
+ LastEditTime : 2023-01-31 11:20:23
  FilePath     : \\BMS-translator\\src\\main.py
  Copyright (C) 2023 liuyu. All rights reserved.
 '''
@@ -163,46 +163,77 @@ def param_msg_name(data):
 def bytes_translation(json_dic, format_dic, key, byte):
     text = ''
     # 选项翻译
-    if 'options' in json_dic['data'][key].keys():
-        if str(byte) in json_dic['data'][key]['options'].keys():
-            text += f"{key}: {json_dic['data'][key]['options'][str(byte)]}; " 
+    if 'options' in json_dic.keys():
+        if str(byte) in json_dic['options'].keys():
+            if key:
+                text += f"{key}: {json_dic['options'][str(byte)]}; " 
+            else:
+                return json_dic['options'][str(byte)]
         else:
             return f"解析错误- {key}options"
     # 比率 偏移量 计算 翻译       
-    elif 'ratio' in json_dic['data'][key].keys():
-        values = Decimal(str(byte)) * Decimal(str(json_dic['data'][key]['ratio'])) + Decimal(str(json_dic['data'][key]['offset']))
-        text += f"{key}: {values}{json_dic['data'][key]['unit_symbol']}; "
+    elif 'ratio' in json_dic.keys():
+        values = Decimal(str(byte)) * Decimal(str(json_dic['ratio'])) + Decimal(str(json_dic['offset']))
+        if key:
+            text += f"{key}: {values}{json_dic['unit_symbol']}; "
+        else:
+            return f"{values}{json_dic['unit_symbol']}"
     # 根据类型进行翻译
-    elif "type" in json_dic['data'][key].keys():
-        if json_dic['data'][key]['type'] == "int":
-            text += f"{key}: {byte}; "
-        if json_dic['data'][key]['type'] == "ascii":
-            range_list = json_dic['data'][key]["bytes/bit"]
+    elif "type" in json_dic.keys():
+        if json_dic['type'] == "int":
+            if key:
+                text += f"{key}: {byte}; "
+            else:
+                return byte
+        if json_dic['type'] == "ascii":
+            range_list = json_dic["bytes/bit"]
             ascii_str = format_dic['data'][range_list[0]: range_list[0] + (range_list[1]+1)*2].replace(' ', '')
-            if ascii_str.lower() not in ['ffffff', ]:   #充电机所在区域编码
-                text += f"{key}: "
-                for cell in cut(ascii_str, 2):
-                    text += f"{chr(int(cell, 16))}"
-                text += '; '
+            if ascii_str.lower() not in ['ffffff', ]:   #充电机所在区域编码 6f 为无
+                if key:
+                    text += f"{key}: "
+                    for cell in cut(ascii_str, 2):
+                        text += f"{chr(int(cell, 16))}"
+                    text += '; '
+                else:
+                    alone = ''
+                    for cell in cut(ascii_str, 2):
+                        alone += f"{chr(int(cell, 16))}"
+                    return alone
             else: 
-                text += f"{key}: 无; "
+                if key:
+                    text += f"{key}: 无; "
+                else:
+                    return '无'
     # 组合体翻译
-    elif 'components' in json_dic['data'][key].keys():
-        print(len(hex(byte)), hex(byte), format_dic['name'], key)
-        
-        components = json_dic['data'][key]['components']
+    elif 'components' in json_dic.keys():
+        # print(json_dic["bytes/bit"][1], hex(byte), format_dic['name'], key)
+        components = json_dic['components']
+        cell_list = []
         if isinstance(components[0]["bytes/bit"][0], int):
+            s_str = bit_overturn(hex(byte), (json_dic["bytes/bit"][1])*2)
             for com in components:
-                
-                
-                pass
+                s_data = s_str[(com['bytes/bit'][0]-1)*2: (com['bytes/bit'][1]+com['bytes/bit'][0]-1)*2]
+                if len(s_data) > 2:
+                    s_data = bit_overturn("xx"+ s_data, com['bytes/bit'][1]*2)
+                cell = bytes_translation(com, format_dic, None, s_data)
+                cell_list.append(cell)
+            way = int(json_dic['schema'][0])
+            tran_packs = json_dic['schema'][1].split('~')
+            text += f'{key}: '
+            for cell, pack in zip(cell_list[::way], tran_packs[:-1]):
+                text += f"{pack}{cell}"
+            text += f"{tran_packs[-1]}; "
+            print('components', cell_list, text, format_dic['name'], key)
+        elif isinstance(components[0]["bytes/bit"][0], float):
+            text += f"{key}: 未解析; "
+
     if text == '':
         text = f'{key}: 未解析; '
     return text
 
 def bit_translation(flag_key, json_dic, format_dic, data_keys, byte):
     text = ''
-    bit_fun_str = str(bit_overturn(bin(byte)))
+    bit_fun_str = str(bit_overturn(bin(byte), 8))
     byte_range = [int(json_dic['data'][flag_key]['bytes/bit'][0]), len(bit_fun_str)]
     key = flag_key
 
@@ -211,7 +242,7 @@ def bit_translation(flag_key, json_dic, format_dic, data_keys, byte):
 
     bit_str = bit_fun_str[range_list[0]: range_list[1]]
     if bit_str == '' or format_dic['name'] == 'BSM':
-        print(bit_str, key, range_list, bit_overturn(bin(byte)))
+        print(bit_str, key, range_list, bit_overturn(bin(byte), 8))
     if 'options' in json_dic['data'][key].keys():  
         # print(bit_str, key, range_list, bit_overturn(byte))
         if str(int(bit_str, 2)) in json_dic['data'][key]['options'].keys():
@@ -234,23 +265,25 @@ def translation_fun(json_dic, format_dic, data_keys, pack) ->str:
         key = data_keys[index]
         pack[index] = int.from_bytes(pack[index], 'little')
         if isinstance(json_dic['data'][key]['bytes/bit'][1], int):
-            text += bytes_translation(json_dic, format_dic, key, pack[index])
+            text += bytes_translation(json_dic['data'][key], format_dic, key, pack[index])
             
         elif isinstance(json_dic['data'][key]['bytes/bit'][1], float):
             text += bit_translation(key, json_dic, format_dic, data_keys, pack[index])
             
     return text[:-2]  # 去掉翻译后最后一个;
 
-def bit_overturn(obj) -> str:
+def bit_overturn(obj, num) -> str:
     
     s_list = [(obj)[i:i+2] for i in range(2,len(obj),2)]
     s_str =  ''.join(s_list[::-1])
     if s_str == '0':
-        return '0'* 8
-    if len(s_str) < 8:
+        return '0'* num
+    if len(s_str) < num:
         return s_str + '0'*(8-len(s_str))
-    if len(s_str) == 8:
+    if len(s_str) == num:
         return s_str
+    else:
+        return None
 
 def cut(obj, sec):
     return [obj[i:i+sec] for i in range(0,len(obj),sec)]
