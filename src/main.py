@@ -224,7 +224,8 @@ def bytes_translation(json_dic, format_dic, key, byte, index):
                 range_list = com['bytes/bit']
                 byte_start = hexToBit(range_list[0]) - hexToBit(data_js[format_dic['name']]['format_list'][index]) - 1 
                 byte_end = byte_start + int(str(range_list[1]).split('.')[1])
-                cell_list.append(bit_translation(com, None, byte, bit_Lenthg, [byte_start, byte_end]))
+                cell = bit_translation(com, None, byte, bit_Lenthg, [byte_start, byte_end])
+                cell_list.append(str(cell))
             text += schema_to_str(json_dic['schema'], cell_list, key)
         else:
             text += f"{key}: 错误; "
@@ -238,19 +239,16 @@ def schema_to_str(schema, cell_list, key):
     tran_packs = schema[1].split('~')
     text += f'{key}: '
     for cell, pack in zip(cell_list[::way], tran_packs[:-1]):
-        text += f'{pack}{cell}'
+        text = text + pack + str(cell)
     text += f'{tran_packs[-1]}; '
-
     return text
 
 def bit_translation(json_dic, key, byte, bit_Lenthg, range_list):
     text = ''
     bit_fun_str = str(bit_overturn(bin(byte), bit_Lenthg))
-
     bit_str = bit_fun_str[range_list[0]: range_list[1]]
     
     if 'options' in json_dic.keys():  
-        
         if str(int(bit_str, 2)) in json_dic['options'].keys():
             if key:
                 text += f"{key}: {json_dic['options'][str(int(bit_str, 2))]}; " 
@@ -264,7 +262,12 @@ def bit_translation(json_dic, key, byte, bit_Lenthg, range_list):
             text += f"{key}: {values}{json_dic['unit_symbol']}; "
         else: 
             return f"{values}{json_dic['unit_symbol']}"
-    
+    elif "type" in json_dic.keys():
+        if json_dic['type'] == "int":
+            if key:
+                text += f"{key}: {byte}; "
+            else:
+                return byte
     if text == '':
         if key:
             text = f'{key}: 未解析; ' 
@@ -274,8 +277,7 @@ def bit_translation(json_dic, key, byte, bit_Lenthg, range_list):
         return text
     
 def translation_fun(json_dic, format_dic, data_keys, pack) ->str:
-    text = format_dic['tran_text']
-
+    text = ''
     for index in range(len(pack)):
         key = data_keys[index]
         pack[index] = int.from_bytes(pack[index], 'little')
@@ -291,7 +293,7 @@ def translation_fun(json_dic, format_dic, data_keys, pack) ->str:
             text += bit_translation(json_dic['data'][key], key, pack[index], bit_Lenthg, [byte_start, byte_end])
         else:
             return f"json_error {json_dic['data'][key]['bytes/bit']}, {format_dic['format_str']}, {format_dic['name']}"
-            
+    
     return text[:-2]  # 去掉翻译后最后一个;
 
 def hexToBit(num:str) -> int:
@@ -356,9 +358,9 @@ def one_frame_analysis(json_dic, name, length, dataRaw):
     data = int(format_dic['data'], 16).to_bytes(total_num, byteorder="big", signed=False)
     pack = list(struct.unpack(format_dic['format_str'], data))
     
-    format_dic['tran_text'] = translation_fun(json_dic, format_dic, data_keys, pack)
-    return (pack,format_dic['format_list'],format_dic['format_str'],  format_dic['tran_text'])
-    # return format_dic['tran_text']
+    format_dic['tran_text'] += translation_fun(json_dic, format_dic, data_keys, pack)
+    # return (pack,format_dic['format_list'],format_dic['format_str'],  format_dic['tran_text'])
+    return format_dic['tran_text']
 
 def analysis_dataRaw(data):
     if data['名称'].find("非标") != -1:
@@ -373,7 +375,6 @@ def analysis_dataRaw(data):
     if data['名称'] in data_js.keys():
         return one_frame_analysis(data_js[data['名称']], data[0], data[1], data['数据(HEX)'])
  
-
 '''
  description: 给名称一列赋值
  param {*} df pandas.Dataframe 对象 csv文件的数据
