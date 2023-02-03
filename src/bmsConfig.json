@@ -314,7 +314,7 @@
                     {"bytes/bit": [5.1, 1.4], "ratio": 0.01,"offset": 0,"unit_symbol": "V"},
                     {"bytes/bit": [6.5, 0.4], "ratio": 1,"offset": 0,"unit_symbol": "组号"}
                 ],
-                "schema": [1, "最高单体动力蓄电池电压及其组号: ~V 组号~"]
+                "schema": [1, "最高单体动力蓄电池电压及其组号: ~V ~"]
             },
             "当前荷电状态SOC(%)": {
                 "bytes/bit": [7, 1],

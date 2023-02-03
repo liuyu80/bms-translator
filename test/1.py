@@ -40,4 +40,7 @@ def hexToBit(num) -> int:
     elif isinstance(num, int):
         return num * 8
 
-print(hexToBit(7.1))
+data ='10 29 00 06 FF 00 02 00'
+data = data.replace(' ', '')
+print(cut(data, 2)[3 : 0 : -1])
+

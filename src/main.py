@@ -19,7 +19,7 @@ from tkinter import filedialog
 import struct
 from check_sys import *
 
-'''多帧报文名称识别内部变量'''
+'''多帧报文名称识别-内部变量'''
 more_frame_config = {
     'name': '',
     'reply': False,
@@ -28,6 +28,14 @@ more_frame_config = {
     'total': 0,
     'count': 0,
     'total_bytes': 0
+}
+'''多帧报文解析-内部变量'''
+more_analysis_config = {
+    'name': '',
+    'total_num': None,
+    'index': None,
+    'total_bytes': None,
+    'data': '',
 }
 global data_js
 
@@ -172,9 +180,10 @@ def bytes_translation(json_dic, format_dic, key, byte, index):
             return f"解析错误- {key}options"
     # 比率 偏移量 计算 翻译       
     elif 'ratio' in json_dic.keys():
-        values = Decimal(str(byte)) * Decimal(str(json_dic['ratio'])) + Decimal(str(json_dic['offset']))
-        if values < 0:
-            values = -values
+        try:    
+            values = Decimal(str(byte)) * Decimal(str(json_dic['ratio'])) + Decimal(str(json_dic['offset']))
+        except:
+            values = (byte, )
         if key:
             text += f"{key}: {values}{json_dic['unit_symbol']}; "
         else:
@@ -259,7 +268,10 @@ def bit_translation(json_dic, key, byte, bit_Lenthg, range_list):
         else:
             return f"解析错误-{key}options"
     elif 'ratio' in json_dic.keys():
-        values = Decimal(bit_str) * Decimal(str(json_dic['ratio'])) + Decimal(str(json_dic['offset']))
+        try:
+            values = Decimal(str(int(bit_str, 2))) * Decimal(str(json_dic['ratio'])) + Decimal(str(json_dic['offset']))
+        except:
+            values = (byte, )
         if key:
             text += f"{key}: {values}{json_dic['unit_symbol']}; "
         else: 
@@ -315,7 +327,6 @@ def hexToBit(num:str) -> int:
             return int(str_nums[0]) * 8 + int(str_nums[1])
 
 def bit_overturn(obj, num) -> str:
-    
     s_list = [(obj)[i:i+2] for i in range(2,len(obj),2)]
     s_str =  ''.join(s_list[::-1])
     if s_str == '0':
@@ -328,6 +339,7 @@ def bit_overturn(obj, num) -> str:
         return None
 
 def cut(obj, sec):
+    obj = obj.replace(' ','')
     return [obj[i:i+sec] for i in range(0,len(obj),sec)]
 
 def one_frame_analysis(json_dic, name, length, dataRaw):
@@ -361,8 +373,60 @@ def one_frame_analysis(json_dic, name, length, dataRaw):
     pack = list(struct.unpack(format_dic['format_str'], data))
     
     format_dic['tran_text'] += translation_fun(json_dic, format_dic, data_keys, pack)
-    # return (pack,format_dic['format_list'],format_dic['format_str'],  format_dic['tran_text'])
-    return format_dic['tran_text']
+    return (pack , format_dic['format_list'], format_dic['format_str'], format_dic['tran_text'])
+    # return format_dic['tran_text']
+
+
+def more_frame_analysis(json_dic, name, index, dataRaw):
+    more_analysis_config['name'] = name
+    text = ''
+    if index in ['start', 'reply', 'end']:
+        if len(dataRaw) != 8*2+7:
+            text += f'{name}-{index}-长度解析错误'
+            return text
+        else:
+            data_list = cut(dataRaw, 2)
+    if index == 'start':
+        more_analysis_config['total_num'] = int(data_list[3], 16)
+        more_analysis_config['total_bytes'] = int(data_list[2]+data_list[1], 16)
+        text += f'{name}-{index}-> 总包数: {more_analysis_config["total_num"]}, 总字节数: {more_analysis_config["total_bytes"]}'
+        return text
+    elif index == 'reply':
+        if int(data_list[1], 16) == more_analysis_config['total_num']:
+            text += f'{name}-{index}-> 总包数: {int(data_list[1], 16)}, 下面接收第{int(data_list[2], 16)}包'
+            return text
+        else:
+            text += f'{name}-{index}-> 回应包数不正确, 总包数: {int(data_list[1], 16)}, 下面接收第{int(data_list[2], 16)}包'
+            return text
+    elif index == 'end':
+        if int(data_list[3], 16) == more_analysis_config['total_num'] and \
+            int(data_list[2]+data_list[1], 16) == more_analysis_config['total_bytes']: 
+            more_analysis_config['name'] = ''
+            more_analysis_config['total_num'] = None
+            more_analysis_config['total_bytes'] = None
+            text += f'{name}-{index}-> 接收完成，总包数: {int(data_list[3], 16)}, 总字节数: {int(data_list[2]+data_list[1], 16)}'
+            return text
+        else:
+            more_analysis_config['name'] = ''
+            more_analysis_config['total_num'] = None
+            more_analysis_config['total_bytes'] = None
+            text += f'{name}-{index}-> 数据错误，总包数: {int(data_list[3], 16)}, 总字节数: {int(data_list[2]+data_list[1], 16)}'
+            return text
+    else:
+        if int(index) < more_analysis_config['total_num']:
+            more_analysis_config['data'] += dataRaw[2:]
+            return f'{name}报文-> 第{index}包'
+        elif int(index) == more_analysis_config['total_num']:
+            more_analysis_config['data'] += dataRaw[2:]
+            length = more_analysis_config['total_bytes']
+            data = more_analysis_config['data'][:(length)*2+length]
+            print(data, name)
+            more_analysis_config['data'] = ''
+            
+            return one_frame_analysis(json_dic, name, length, data)
+        else:
+            return '包数不正确, 解析错误'
+
 
 def analysis_dataRaw(data):
     if data['名称'].find("非标") != -1:
@@ -371,9 +435,10 @@ def analysis_dataRaw(data):
         return '解析错误'
 
     elif data['名称'].find("-") != -1:
-        if 'max_count' in data_js[data['名称'].split('-')[0]].keys():
-            return f"{data['名称'].split('-')[0]}报文未解析"
-        return '多帧报文'
+        name, index = data['名称'].split('-')
+        if 'max_count' in data_js[name].keys():
+            return f"{name}报文未解析"
+        return more_frame_analysis(data_js[name], name, index, data['数据(HEX)'])
 
     if data['名称'] in data_js.keys():
         if 'max_count' in data_js[data['名称']].keys():
