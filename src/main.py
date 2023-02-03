@@ -369,12 +369,15 @@ def analysis_dataRaw(data):
         return '非标未识别'
     elif data['名称'] == 'error':
         return '解析错误'
+
     elif data['名称'].find("-") != -1:
+        if 'max_count' in data_js[data['名称'].split('-')[0]].keys():
+            return f"{data['名称'].split('-')[0]}报文未解析"
         return '多帧报文'
-    elif data['名称'].find("BSP") != -1:
-        return "BSP-动力蓄电池预留报文"
-    
+
     if data['名称'] in data_js.keys():
+        if 'max_count' in data_js[data['名称']].keys():
+            return f"{data['名称']}报文未解析"
         return one_frame_analysis(data_js[data['名称']], data[0], data[1], data['数据(HEX)'])
  
 '''
