@@ -180,7 +180,7 @@ def bytes_translation(json_dic, format_dic, key, byte, index):
             return f"{key}: 解析错误-bytesOptions; "
     # 比率 偏移量 计算 翻译       
     elif 'ratio' in json_dic.keys():
-        try:    
+        try:
             values = Decimal(str(byte)) * Decimal(str(json_dic['ratio'])) + Decimal(str(json_dic['offset']))
         except:
             values = (byte, "bytes_translation---ratio")
@@ -231,7 +231,7 @@ def bytes_translation(json_dic, format_dic, key, byte, index):
         # bit组合体翻译
         elif isinstance(components[0]["bytes/bit"][0], float):
             for com in components:
-                bit_Lenthg = int(format_dic['format_str'].split(' ')[index][0]) * 8
+                bit_Lenthg = int(cut(format_dic['format_str'], 2)[index][0]) * 8
                 range_list = com['bytes/bit']
                 byte_start = hexToBit(range_list[0]) - hexToBit(data_js[format_dic['name']]['format_list'][index]) - 1 
                 byte_end = byte_start + int(str(range_list[1]).split('.')[1])
@@ -299,7 +299,7 @@ def translation_fun(json_dic, format_dic, data_keys, pack) ->str:
             text += bytes_translation(json_dic['data'][key], format_dic, key, pack[index], index)
             
         elif isinstance(json_dic['data'][key]['bytes/bit'][1], float):
-            bit_Lenthg = int(format_dic['format_str'].split(' ')[index][0]) * 8
+            bit_Lenthg = int(cut(format_dic['format_str'], 2)[index][0]) * 8
             range_list = json_dic['data'][key]['bytes/bit']
             byte_start = hexToBit(range_list[0]) - hexToBit(data_js[format_dic['name']]['format_list'][index]) - 1 
             byte_end = byte_start + int(str(range_list[1]).split('.')[1])
@@ -353,20 +353,25 @@ def one_frame_analysis(json_dic, name, length, dataRaw):
         'tran_text': f'{name}报文-> ',
     }
     if format_dic['total_bytes']:
-        if format_dic['total_bytes'] < format_dic['length']:
+        if format_dic['total_bytes'] > format_dic['length']:
             return f'解析错误-与配置文件的长度不符 {name}_total_bytes: {format_dic["total_bytes"]}'
     
     total_num = 0
     for num ,cell in enumerate(format_dic['format_list']):
+        if format_dic['total_bytes'] == total_num or length == total_num:
+            break
         if cell == format_dic['format_list'][-1]:
             values = list(json_dic['data'].keys())
             values = math.ceil(json_dic['data'][values[-1]]['bytes/bit'][1])
+            
             format_dic['format_str'] += f'{values}s'
         else:
             values = format_dic['format_list'][num+1]-format_dic['format_list'][num]
-            format_dic['format_str'] += f'{values}s '
+            format_dic['format_str'] += f'{values}s'
         total_num += values
 
+    if length != total_num and format_dic['total_bytes'] != total_num:
+        return f'解析失败-长度不一致{format_dic["format_str"]}'
     data_keys = list(json_dic['data'].keys())
     format_dic['data'] = format_dic['data'].replace(' ','')[:total_num*2]
     data = int(format_dic['data'], 16).to_bytes(total_num, byteorder="big", signed=False)

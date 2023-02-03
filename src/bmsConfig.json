@@ -108,7 +108,7 @@
             },
             "预留": {
                 "bytes/bit": [24, 1],
-                "type": "str"
+                "type": "int"
             },
             "车辆识别码(VIN)": {
                 "bytes/bit": [25, 17],
@@ -334,7 +334,7 @@
         "describe": "充电机充电状态",
         "PGN": "0x1200",
         "priority": 6,
-        "total_bytes": 8,
+        "total_bytes": 7,
         "receive_send": "0xf456",
         "optional_count": 0,
         "data": {
@@ -573,7 +573,7 @@
         "describe": "BMS统计数据",
         "PGN": "0x1C00",
         "priority": 6,
-        "total_bytes": 8,
+        "total_bytes": 7,
         "receive_send": "0x56f4",
         "optional_count": 0,
         "data": {
