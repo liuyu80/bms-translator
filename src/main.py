@@ -173,6 +173,8 @@ def bytes_translation(json_dic, format_dic, key, byte, index):
     # 比率 偏移量 计算 翻译       
     elif 'ratio' in json_dic.keys():
         values = Decimal(str(byte)) * Decimal(str(json_dic['ratio'])) + Decimal(str(json_dic['offset']))
+        if values < 0:
+            values = -values
         if key:
             text += f"{key}: {values}{json_dic['unit_symbol']}; "
         else:
