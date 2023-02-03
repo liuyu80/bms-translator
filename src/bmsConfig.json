@@ -312,9 +312,9 @@
                 "bytes/bit": [5, 2],
                 "components":[
                     {"bytes/bit": [5.1, 1.4], "ratio": 0.01,"offset": 0,"unit_symbol": "V"},
-                    {"bytes/bit": [6.5, 0.4], "ratio": 1,"offset": 0,"unit_symbol": "组号"}
+                    {"bytes/bit": [6.5, 0.4], "ratio": 1,"offset": 0,"unit_symbol": ""}
                 ],
-                "schema": [1, " ~ ~"]
+                "schema": [1, " ~ 组号~"]
             },
             "当前荷电状态SOC(%)": {
                 "bytes/bit": [7, 1],
