@@ -40,7 +40,20 @@ def hexToBit(num) -> int:
     elif isinstance(num, int):
         return num * 8
 
-data ='10 29 00 06 FF 00 02 00'
-data = data.replace(' ', '')
-print(cut(data, 2)[3 : 0 : -1])
-
+data = [
+    '01 01 01 00 01 E8 03 20',
+    '02 03 00 00 00 00 00 00',
+    '03 00 00 00 00 00 00 00',
+    '04 00 00 00 54 45 53 54',
+    '05 30 30 30 30 30 30 30',
+    '06 30 30 30 30 30 31 FF',
+]
+text = ''
+length = 41
+for line in data:
+    text += line[2:]
+text = text[:(length)*2+length]
+text = text.replace(' ', '')
+data = int(text, 16).to_bytes(41, byteorder="big", signed=False)
+pack = list(struct.unpack('3s 1s 2s 2s 4s 4s 3s 3s 1s 1s 17s 8s', data))
+print(text)
