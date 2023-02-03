@@ -177,13 +177,13 @@ def bytes_translation(json_dic, format_dic, key, byte, index):
             else:
                 return json_dic['options'][str(byte)]
         else:
-            return f"解析错误- {key}options"
+            return f"{key}: 解析错误-bytesOptions; "
     # 比率 偏移量 计算 翻译       
     elif 'ratio' in json_dic.keys():
         try:    
             values = Decimal(str(byte)) * Decimal(str(json_dic['ratio'])) + Decimal(str(json_dic['offset']))
         except:
-            values = (byte, )
+            values = (byte, "bytes_translation---ratio")
         if key:
             text += f"{key}: {values}{json_dic['unit_symbol']}; "
         else:
@@ -266,12 +266,12 @@ def bit_translation(json_dic, key, byte, bit_Lenthg, range_list):
             else:
                 return json_dic['options'][str(int(bit_str, 2))]
         else:
-            return f"解析错误-{key}options"
+            return f"bit解析错误-{key}options; "
     elif 'ratio' in json_dic.keys():
         try:
             values = Decimal(str(int(bit_str, 2))) * Decimal(str(json_dic['ratio'])) + Decimal(str(json_dic['offset']))
         except:
-            values = (byte, )
+            values = (bit_str, )
         if key:
             text += f"{key}: {values}{json_dic['unit_symbol']}; "
         else: 
@@ -373,7 +373,7 @@ def one_frame_analysis(json_dic, name, length, dataRaw):
     pack = list(struct.unpack(format_dic['format_str'], data))
     
     format_dic['tran_text'] += translation_fun(json_dic, format_dic, data_keys, pack)
-    return (pack , format_dic['format_list'], format_dic['format_str'], format_dic['tran_text'])
+    return (data, pack , format_dic['format_list'], format_dic['format_str'], format_dic['tran_text'])
     # return format_dic['tran_text']
 
 
@@ -420,7 +420,6 @@ def more_frame_analysis(json_dic, name, index, dataRaw):
             more_analysis_config['data'] += dataRaw[2:]
             length = more_analysis_config['total_bytes']
             data = more_analysis_config['data'][:(length)*2+length]
-            print(data, name)
             more_analysis_config['data'] = ''
             
             return one_frame_analysis(json_dic, name, length, data)
