@@ -183,7 +183,7 @@ def bytes_translation(json_dic, format_dic, key, byte, index):
         try:
             values = Decimal(str(byte)) * Decimal(str(json_dic['ratio'])) + Decimal(str(json_dic['offset']))
         except:
-            values = (byte, "bytes_translation---ratio")
+            values = (byte, 'ratio')
         if key:
             text += f"{key}: {values}{json_dic['unit_symbol']}; "
         else:
@@ -197,8 +197,8 @@ def bytes_translation(json_dic, format_dic, key, byte, index):
                 return byte
         if json_dic['type'] == "ascii":
             range_list = json_dic["bytes/bit"]
-            ascii_str = format_dic['data'][range_list[0]: range_list[0] + (range_list[1]+1)*2].replace(' ', '')
-            if ascii_str.lower() not in ['ffffff', ]:   #充电机所在区域编码 6f 为无
+            ascii_str = format_dic['data'][(range_list[0]-1)*2: (range_list[0]+range_list[1]-1)*2].replace(' ', '')
+            if ascii_str.lower() not in ['ffffff', '00000000']:   #充电机所在区域编码 6f 为无
                 if key:
                     text += f"{key}: "
                     for cell in cut(ascii_str, 2):
@@ -222,7 +222,9 @@ def bytes_translation(json_dic, format_dic, key, byte, index):
         if isinstance(components[0]["bytes/bit"][0], int):
             s_str = bit_overturn(hex(byte), (json_dic["bytes/bit"][1])*2)
             for com in components:
-                s_data = s_str[(com['bytes/bit'][0]-1)*2: (com['bytes/bit'][1]+com['bytes/bit'][0]-1)*2]
+                range_list = [com['bytes/bit'][0]-json_dic["bytes/bit"][0]]
+                range_list.append( range_list[0] + com['bytes/bit'][1])
+                s_data = s_str[range_list[0]*2: range_list[1]*2]
                 if len(s_data) > 2:
                     s_data = bit_overturn("xx"+ s_data, com['bytes/bit'][1]*2)
                 cell = bytes_translation(com, format_dic, None, s_data, index)
@@ -234,7 +236,7 @@ def bytes_translation(json_dic, format_dic, key, byte, index):
                 bit_Lenthg = int(cut(format_dic['format_str'], 2)[index][0]) * 8
                 range_list = com['bytes/bit']
                 byte_start = hexToBit(range_list[0]) - hexToBit(data_js[format_dic['name']]['format_list'][index]) - 1 
-                byte_end = byte_start + int(str(range_list[1]).split('.')[1])
+                byte_end = byte_start + hexToBit(range_list[1])
                 cell = bit_translation(com, None, byte, bit_Lenthg, [byte_start, byte_end])
                 cell_list.append(str(cell))
             text += schema_to_str(json_dic['schema'], cell_list, key)
@@ -266,12 +268,9 @@ def bit_translation(json_dic, key, byte, bit_Lenthg, range_list):
             else:
                 return json_dic['options'][str(int(bit_str, 2))]
         else:
-            return f"bit解析错误-{key}options; "
+            return f"bit解析错误-{key}options, {bit_str}; "
     elif 'ratio' in json_dic.keys():
-        try:
-            values = Decimal(str(int(bit_str, 2))) * Decimal(str(json_dic['ratio'])) + Decimal(str(json_dic['offset']))
-        except:
-            values = (bit_str, )
+        values = Decimal(str(int(bit_str, 2))) * Decimal(str(json_dic['ratio'])) + Decimal(str(json_dic['offset']))
         if key:
             text += f"{key}: {values}{json_dic['unit_symbol']}; "
         else: 
@@ -302,7 +301,7 @@ def translation_fun(json_dic, format_dic, data_keys, pack) ->str:
             bit_Lenthg = int(cut(format_dic['format_str'], 2)[index][0]) * 8
             range_list = json_dic['data'][key]['bytes/bit']
             byte_start = hexToBit(range_list[0]) - hexToBit(data_js[format_dic['name']]['format_list'][index]) - 1 
-            byte_end = byte_start + int(str(range_list[1]).split('.')[1])
+            byte_end = byte_start + hexToBit(range_list[1])
             
             text += bit_translation(json_dic['data'][key], key, pack[index], bit_Lenthg, [byte_start, byte_end])
         else:
@@ -332,7 +331,7 @@ def bit_overturn(obj, num) -> str:
     if s_str == '0':
         return '0'* num
     if len(s_str) < num:
-        return s_str + '0'*(8-len(s_str))
+        return s_str + '0'*(num-len(s_str))
     if len(s_str) == num:
         return s_str
     else:
@@ -378,8 +377,8 @@ def one_frame_analysis(json_dic, name, length, dataRaw):
     pack = list(struct.unpack(format_dic['format_str'], data))
     
     format_dic['tran_text'] += translation_fun(json_dic, format_dic, data_keys, pack)
-    return (data, pack , format_dic['format_list'], format_dic['format_str'], format_dic['tran_text'])
-    # return format_dic['tran_text']
+    # return (data, pack , format_dic['format_str'], format_dic['tran_text'])
+    return format_dic['tran_text']
 
 
 def more_frame_analysis(json_dic, name, index, dataRaw):
