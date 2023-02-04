@@ -1,4 +1,5 @@
 import struct
+from decimal import Decimal
 
 data = 'FD'
 
@@ -17,18 +18,7 @@ def cut(obj, sec):
 range_list = [6.7, 0.2]
 range_list = [int(str(range_list[0])[-1])-1, int(str(range_list[1])[-1])+ int(str(range_list[0])[-1])-1]
 
-def bit_overturn(obj, num) -> str:
-    s_list = [(obj)[i:i+2] for i in range(2,len(obj),2)]
-    print(s_list)
-    s_str =  ''.join(s_list[::-1])
-    if s_str == '0':
-        return '0'* num
-    if len(s_str) < num:
-        return s_str + '0'*(num-len(s_str))
-    if len(s_str) == num:
-        return s_str
-    else:
-        return None
+
 
 def hexToBit(num) -> int:
     if isinstance(num, float):
@@ -48,12 +38,17 @@ data = [
     '05 30 30 30 30 30 30 30',
     '06 30 30 30 30 30 31 FF',
 ]
-text = ''
-length = 41
-for line in data:
-    text += line[2:]
-text = text[:(length)*2+length]
-text = text.replace(' ', '')
-data = int(text, 16).to_bytes(41, byteorder="big", signed=False)
-pack = list(struct.unpack('3s 1s 2s 2s 4s 4s 3s 3s 1s 1s 17s 8s', data))
-print(text)
+
+def bit_overturn(obj, num) -> str:
+    s_list = [(obj)[i:i+2] for i in range(2,len(obj),2)]
+    s_str =  ''.join(s_list[::-1])
+    if s_str == '0':
+        return '0'* num
+    if len(s_str) < num:
+        return s_str + '0'*(num-len(s_str))
+    if len(s_str) == num:
+        return s_str
+    else:
+        return None
+
+values = Decimal('0') * Decimal(str(json_dic['ratio'])) + Decimal(str(json_dic['offset']))
