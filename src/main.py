@@ -37,6 +37,15 @@ more_analysis_config = {
     'total_bytes': None,
     'data': '',
 }
+'''不定长报文解析-内部变量'''
+unsized_frame_config = {
+    'name': '',
+    'total_num': None,
+    'index': None,
+    'total_bytes': None,
+    'data': '',
+    'format_str': '',
+}
 global data_js
 
 '''
@@ -180,10 +189,7 @@ def bytes_translation(json_dic, format_dic, key, byte, index):
             return f"{key}: 解析错误-bytesOptions; "
     # 比率 偏移量 计算 翻译       
     elif 'ratio' in json_dic.keys():
-        try:
-            values = Decimal(str(byte)) * Decimal(str(json_dic['ratio'])) + Decimal(str(json_dic['offset']))
-        except:
-            values = (byte, 'ratio')
+        values = Decimal(str(byte)) * Decimal(str(json_dic['ratio'])) + Decimal(str(json_dic['offset']))
         if key:
             text += f"{key}: {values}{json_dic['unit_symbol']}; "
         else:
@@ -354,20 +360,9 @@ def one_frame_analysis(json_dic, name, length, dataRaw):
     if format_dic['total_bytes']:
         if format_dic['total_bytes'] > format_dic['length']:
             return f'解析错误-与配置文件的长度不符 {name}_total_bytes: {format_dic["total_bytes"]}'
-    
-    total_num = 0
-    for num ,cell in enumerate(format_dic['format_list']):
-        if format_dic['total_bytes'] == total_num or length == total_num:
-            break
-        if cell == format_dic['format_list'][-1]:
-            values = list(json_dic['data'].keys())
-            values = math.ceil(json_dic['data'][values[-1]]['bytes/bit'][1])
-            
-            format_dic['format_str'] += f'{values}s'
-        else:
-            values = format_dic['format_list'][num+1]-format_dic['format_list'][num]
-            format_dic['format_str'] += f'{values}s'
-        total_num += values
+
+    format_dic['format_str'], total_num = format_list_to_str(
+        format_dic['format_list'], format_dic['total_bytes'], length, json_dic['data'])
 
     if length != total_num and format_dic['total_bytes'] != total_num:
         return f'解析失败-长度不一致{format_dic["format_str"]}'
@@ -377,9 +372,8 @@ def one_frame_analysis(json_dic, name, length, dataRaw):
     pack = list(struct.unpack(format_dic['format_str'], data))
     
     format_dic['tran_text'] += translation_fun(json_dic, format_dic, data_keys, pack)
-    # return (data, pack , format_dic['format_str'], format_dic['tran_text'])
-    return format_dic['tran_text']
-
+    return (pack ,format_dic['format_list'] ,format_dic['format_str'], format_dic['tran_text'])
+    # return format_dic['tran_text']
 
 def more_frame_analysis(json_dic, name, index, dataRaw):
     more_analysis_config['name'] = name
@@ -425,11 +419,50 @@ def more_frame_analysis(json_dic, name, index, dataRaw):
             length = more_analysis_config['total_bytes']
             data = more_analysis_config['data'][:(length)*2+length]
             more_analysis_config['data'] = ''
-            
+            if 'max_count' in json_dic.keys():
+                json_dic['total_bytes'] = more_analysis_config['total_bytes']
+                json_dic['format_list'], format_str, total_num = unsized_format(json_dic)
+                return unsized_frame_analysis(json_dic, name, length, data)
             return one_frame_analysis(json_dic, name, length, data)
         else:
             return '包数不正确, 解析错误'
 
+def format_list_to_str(format_list, total_bytes, length, json_dic):
+    total_num = 0
+    format_str = ''
+    for num ,cell in enumerate(format_list):
+        if total_bytes == total_num or length == total_num:
+            break
+        if cell == format_list[-1]:
+            values = list(json_dic.keys())
+            values = math.ceil(json_dic[values[-1]]['bytes/bit'][1])
+            
+            format_str += f'{values}s'
+        else:
+            values = format_list[num+1]-format_list[num]
+            format_str += f'{values}s'
+        total_num += values
+    return (format_str, total_num)
+
+def unsized_format(json_dic):
+    format_list = [1]
+    temp_list = []
+    total_bytes = 0
+    if json_dic['total_bytes']:
+        for key in json_dic['data'].keys():
+           temp_list.append(json_dic['data'][key]['bytes/bit'][1])
+        while total_bytes != json_dic['total_bytes']:
+            for temp in temp_list:
+                format_list.append(format_list[-1]+temp)
+                total_bytes += temp
+        format_list = format_list[:-1]
+        format_str, total_num = format_list_to_str(format_list, total_bytes, total_bytes, json_dic['data'])
+
+    return (format_list, format_str, total_num)
+
+def unsized_frame_analysis(json_dic, name, index, dataRaw):
+    
+    pass
 
 def analysis_dataRaw(data):
     if data['名称'].find("非标") != -1:
@@ -440,12 +473,13 @@ def analysis_dataRaw(data):
     elif data['名称'].find("-") != -1:
         name, index = data['名称'].split('-')
         if 'max_count' in data_js[name].keys():
-            return f"{name}报文未解析"
+            more_frame_analysis(data_js[name], name, index, data['数据(HEX)'])
+            return f"{name}不定长多帧报文未解析"
         return more_frame_analysis(data_js[name], name, index, data['数据(HEX)'])
 
     if data['名称'] in data_js.keys():
         if 'max_count' in data_js[data['名称']].keys():
-            return f"{data['名称']}报文未解析"
+            return f"{data['名称']}不定长报文未解析"
         return one_frame_analysis(data_js[data['名称']], data[0], data[1], data['数据(HEX)'])
  
 '''
