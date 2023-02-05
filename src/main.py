@@ -495,8 +495,9 @@ def unsized_frame_analysis(json_dic, name, length, data, format_str, total_num):
     tran_list = text.split(f'{data_keys[0]}: ')
     format_dic['tran_text'] += f'{data_keys[0]}: '
     for cell in tran_list[1:]:
-        format_dic['tran_text'] += cell[:-2] + ', '
-    return format_dic['tran_text']
+        cell = cell.replace('; ', '')
+        format_dic['tran_text'] += cell + ', '
+    return format_dic['tran_text'][:-2]
 
 def analysis_dataRaw(data):
     if data['名称'].find("非标") != -1:
@@ -578,6 +579,7 @@ if __name__ == "__main__":
     csv_df = set_meaning(csv_df)
 
     translater_file_name = file_name.split('.')[0] + '-译.' + file_name.split('.')[-1]
+    xlsx_name = file_name.split('.')[0] + '-译.xlsx'
     csv_df.to_csv(os.path.join(file_path, translater_file_name), index =None)
-    
+    csv_df.to_excel(os.path.join(file_path, xlsx_name), index =None)
     
