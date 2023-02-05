@@ -51,4 +51,3 @@ def bit_overturn(obj, num) -> str:
     else:
         return None
 
-values = Decimal('0') * Decimal(str(json_dic['ratio'])) + Decimal(str(json_dic['offset']))
