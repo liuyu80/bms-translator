@@ -483,7 +483,10 @@
         "optional_count": "all",
         "data": {
             "动力蓄电池预留字段": {
-                "bytes/bit": [1, 1]
+                "bytes/bit": [1, 1],
+                "ratio": 1, 
+                "offset": 0, 
+                "unit_symbol": ", "
             }
         }
     },
