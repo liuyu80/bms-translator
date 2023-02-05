@@ -451,7 +451,7 @@
                     {"bytes/bit": [1.1, 1.4], "ratio": 0.01,"offset": 0,"unit_symbol": "V"},
                     {"bytes/bit": [2.5, 0.4], "ratio": 1,"offset": 0,"unit_symbol": ""}
                 ],
-                "schema": [1, "~ 分组号~, "]
+                "schema": [1, "~ 分组号~"]
             }
         }
     },
