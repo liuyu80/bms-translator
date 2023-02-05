@@ -578,8 +578,8 @@ if __name__ == "__main__":
     csv_df = set_msg_name(csv_df)
     csv_df = set_meaning(csv_df)
 
-    translater_file_name = file_name.split('.')[0] + '-译.' + file_name.split('.')[-1]
+    csv_name = file_name.split('.')[0] + '-译.' + file_name.split('.')[-1]
     xlsx_name = file_name.split('.')[0] + '-译.xlsx'
-    csv_df.to_csv(os.path.join(file_path, translater_file_name), index =None)
+    csv_df.to_csv(os.path.join(file_path, csv_name), index =None)
     csv_df.to_excel(os.path.join(file_path, xlsx_name), index =None)
     
