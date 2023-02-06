@@ -112,7 +112,7 @@
             },
             "车辆识别码(VIN)": {
                 "bytes/bit": [25, 17],
-                "type": "int"
+                "type": "ascii"
             },
             "BMS软件版本": {
                 "bytes/bit": [42, 8],
