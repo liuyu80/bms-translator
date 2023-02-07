@@ -7,12 +7,12 @@
  Author       : liuyu
  Date         : 2023-01-07 09:04:55
 LastEditors: liuyu 2543722345@qq.com
-LastEditTime: 2023-02-07 14:06:49
+LastEditTime: 2023-02-07 15:39:38
  FilePath     : \\BMS-translator\\src\\main.py
  Copyright (C) 2023 liuyu. All rights reserved.
 '''
 from decimal import Decimal
-import json, os, re, time, math
+import json, os, re, time, math, sys
 import pandas as pd
 import tkinter as tk
 from tkinter import filedialog
@@ -583,5 +583,8 @@ if __name__ == "__main__":
     csv_name = file_name.split('.')[0] + '-译.' + file_name.split('.')[-1]
     xlsx_name = file_name.split('.')[0] + '-译.xlsx'
     csv_df.to_csv(os.path.join(file_path, csv_name), index =None)
+    os.startfile(os.path.join(file_path, csv_name))
+    sys.exit()
+    
     # csv_df.to_excel(os.path.join(file_path, xlsx_name), index =None)
     

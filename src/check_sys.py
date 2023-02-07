@@ -1,4 +1,4 @@
-import math, json, os
+import math, json, os, sys
 import operator
 
 need_keys = [
@@ -14,15 +14,15 @@ necessarykeys = [
 def path_check(path):
     if path == '':
         print('路径为空')
-        exit()
+        sys.exit()
     file_path, file_name = os.path.split(path)
     name, style = os.path.splitext(file_name)
     if style not in ('.CSV', '.csv'):
         print('文件名不正确')
-        exit()
+        sys.exit()
     if name[-2:] == '-译':
         print('该文件已翻译, 请选择要翻译的报文文件')
-        exit()
+        sys.exit()
 
 
 def bms_check(dic):
@@ -32,10 +32,10 @@ def bms_check(dic):
                 print(f'{key}缺少{need}字段')
         if int(dic[key]['receive_send'], 16) not in receive_send_values:
             print(f"{key}的receive_send的值{dic[key]['receive_send']}不对")
-            exit()
+            sys.exit()
         if dic[key]['priority'] > 7 or dic[key]['priority'] < 0:
             print(f"{key}的priority的值{dic[key]['priority']}不对")
-            exit()
+            sys.exit()
         
         #data字段里的检查
         for cell in dic[key]['data'].keys():
@@ -45,13 +45,13 @@ def bms_check(dic):
                 for line in dic[key]['data'][cell]["components"]:
                     if "bytes/bit" not in line.keys():
                         print(f"{key} 的 {cell} 的components 缺少bytes/bit字段")
-                        exit()
+                        sys.exit()
             for line in necessarykeys: 
                 find_cell_keys = list(set(dic[key]['data'][cell].keys()) & set(line))
                 if not operator.eq(sorted(find_cell_keys), sorted(line)):
                     if len(find_cell_keys):
                         print(f"{key} 下的 {cell} 有不正确字段")
-                        exit()
+                        sys.exit()
 
 def beal_bytesBit(nums:list):
     if len(nums)> 2:
