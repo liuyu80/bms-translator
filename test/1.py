@@ -51,3 +51,10 @@ def bit_overturn(obj, num) -> str:
     else:
         return None
 
+bit_Lenthg = 8* 3
+range_list = [12, 14]
+bit_fun_str =  '0b'+ '0'* (bit_Lenthg - range_list[1])+ '1'* (range_list[1]-range_list[0]) + '0'* range_list[0] 
+bit_int = 4096 & int(bit_fun_str, 2) 
+bit = 4096 >> 12
+
+print(bit, bit_fun_str)
