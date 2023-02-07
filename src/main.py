@@ -7,7 +7,7 @@
  Author       : liuyu
  Date         : 2023-01-07 09:04:55
 LastEditors: liuyu 2543722345@qq.com
-LastEditTime: 2023-02-07 13:24:49
+LastEditTime: 2023-02-07 14:06:49
  FilePath     : \\BMS-translator\\src\\main.py
  Copyright (C) 2023 liuyu. All rights reserved.
 '''
@@ -254,10 +254,6 @@ def bytes_translation(json_dic, format_dic, key, byte, index):
                     range_list = com['bytes/bit']
                     byte_start = hexToBit(range_list[0]) - hexToBit(data_js[format_dic['name']]['format_list'][index]) - 1 
                     byte_end = byte_start + hexToBit(range_list[1])
-                    if key == '最高单体动力蓄电池电压及其组号':
-                        bit_fun_str = str(bit_overturn(bin(byte), bit_Lenthg))
-                        bit_str = bit_fun_str[byte_start: byte_end]
-                        print(com, byte, bit_Lenthg, [byte_start, byte_end], bit_fun_str,bit_str)
                     cell = bit_translation(com, None, byte, bit_Lenthg, [byte_start, byte_end])
                     cell_list.append(str(cell))
             text += schema_to_str(json_dic['schema'], cell_list, key)
@@ -280,16 +276,16 @@ def schema_to_str(schema, cell_list, key):
 def bit_translation(json_dic, key, byte, bit_Lenthg, range_list):
     text = ''
     bit_fun_str =  '0b'+ '0'* (bit_Lenthg - range_list[1])+ '1'* (range_list[1]-range_list[0]) + '0'* range_list[0] 
-    bit_int = byte & int(bit_fun_str, 2)
+    bit_int = (byte & int(bit_fun_str, 2))>> range_list[0]
     
     if 'options' in json_dic.keys():  
-        if bit_int in json_dic['options'].keys():
+        if str(bit_int) in json_dic['options'].keys():
             if key:
-                text += f"{key}: {json_dic['options'][bit_int]}; " 
+                text += f"{key}: {json_dic['options'][str(bit_int)]}; " 
             else:
-                return json_dic['options'][bit_int]
+                return json_dic['options'][str(bit_int)]
         else:
-            return f"bit解析错误-{key}options, {bit_int}; "
+            return f"bit解析错误-{key}options, bit_Lenthg:{bit_Lenthg}-byte:{byte}-range_list:{range_list}-{bit_int}-items{json_dic['options']}; "
     elif 'ratio' in json_dic.keys():
         values = Decimal(str(bit_int)) * Decimal(str(json_dic['ratio'])) + Decimal(str(json_dic['offset']))
         if key:
@@ -446,8 +442,9 @@ def more_frame_analysis(json_dic, name, index, dataRaw):
 def format_list_to_str(format_list, total_bytes, length, json_dic):
     total_num = 0
     format_str = ''
+    min_len = min([length, total_bytes])
     for num ,cell in enumerate(format_list):
-        if total_bytes == total_num or length == total_num:
+        if min_len == total_num:
             break
         if cell == format_list[-1]:
             values = list(json_dic.keys())
