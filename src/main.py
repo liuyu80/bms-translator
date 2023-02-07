@@ -6,8 +6,8 @@
  Version      : 1.0
  Author       : liuyu
  Date         : 2023-01-07 09:04:55
- LastEditors  : liuyu
- LastEditTime : 2023-01-31 15:21:00
+LastEditors: liuyu 2543722345@qq.com
+LastEditTime: 2023-02-07 13:24:49
  FilePath     : \\BMS-translator\\src\\main.py
  Copyright (C) 2023 liuyu. All rights reserved.
 '''
@@ -63,7 +63,7 @@ def read_json(path = 'bmsConfig·.json'):
  param {*} path 文件路径
  return {*} pandas.Dataframe 对象
 '''
-def get_csv_data(path):
+def get_csv_data(path:str):
     header = ['序号','传输方向','时间标识','名称','帧ID','帧格式','帧类型','数据长度','数据(HEX)']
     if os.path.getctime(path) > os.path.getmtime(path):
         timeStamp = os.path.getmtime(path)
@@ -254,6 +254,10 @@ def bytes_translation(json_dic, format_dic, key, byte, index):
                     range_list = com['bytes/bit']
                     byte_start = hexToBit(range_list[0]) - hexToBit(data_js[format_dic['name']]['format_list'][index]) - 1 
                     byte_end = byte_start + hexToBit(range_list[1])
+                    if key == '最高单体动力蓄电池电压及其组号':
+                        bit_fun_str = str(bit_overturn(bin(byte), bit_Lenthg))
+                        bit_str = bit_fun_str[byte_start: byte_end]
+                        print(com, byte, bit_Lenthg, [byte_start, byte_end], bit_fun_str,bit_str)
                     cell = bit_translation(com, None, byte, bit_Lenthg, [byte_start, byte_end])
                     cell_list.append(str(cell))
             text += schema_to_str(json_dic['schema'], cell_list, key)
@@ -275,19 +279,19 @@ def schema_to_str(schema, cell_list, key):
 
 def bit_translation(json_dic, key, byte, bit_Lenthg, range_list):
     text = ''
-    bit_fun_str = str(bit_overturn(bin(byte), bit_Lenthg))
-    bit_str = bit_fun_str[range_list[0]: range_list[1]]
+    bit_fun_str =  '0b'+ '0'* (bit_Lenthg - range_list[1])+ '1'* (range_list[1]-range_list[0]) + '0'* range_list[0] 
+    bit_int = byte & int(bit_fun_str, 2)
     
     if 'options' in json_dic.keys():  
-        if str(int(bit_str, 2)) in json_dic['options'].keys():
+        if bit_int in json_dic['options'].keys():
             if key:
-                text += f"{key}: {json_dic['options'][str(int(bit_str, 2))]}; " 
+                text += f"{key}: {json_dic['options'][bit_int]}; " 
             else:
-                return json_dic['options'][str(int(bit_str, 2))]
+                return json_dic['options'][bit_int]
         else:
-            return f"bit解析错误-{key}options, {bit_str}; "
+            return f"bit解析错误-{key}options, {bit_int}; "
     elif 'ratio' in json_dic.keys():
-        values = Decimal(str(int(bit_str, 2))) * Decimal(str(json_dic['ratio'])) + Decimal(str(json_dic['offset']))
+        values = Decimal(str(bit_int)) * Decimal(str(json_dic['ratio'])) + Decimal(str(json_dic['offset']))
         if key:
             text += f"{key}: {values}{json_dic['unit_symbol']}; "
         else: 
@@ -575,11 +579,12 @@ if __name__ == "__main__":
     data_js = read_json('./src/bmsConfig.json')
     csv_df = get_csv_data(path)
     bms_check(data_js)
+
     csv_df = set_msg_name(csv_df)
     csv_df = set_meaning(csv_df)
 
     csv_name = file_name.split('.')[0] + '-译.' + file_name.split('.')[-1]
     xlsx_name = file_name.split('.')[0] + '-译.xlsx'
     csv_df.to_csv(os.path.join(file_path, csv_name), index =None)
-    csv_df.to_excel(os.path.join(file_path, xlsx_name), index =None)
+    # csv_df.to_excel(os.path.join(file_path, xlsx_name), index =None)
     
