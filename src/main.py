@@ -7,16 +7,15 @@
  Author       : liuyu
  Date         : 2023-01-07 09:04:55
 LastEditors: liuyu 2543722345@qq.com
-LastEditTime: 2023-02-07 15:39:38
+LastEditTime: 2023-02-07 17:17:52
  FilePath     : \\BMS-translator\\src\\main.py
  Copyright (C) 2023 liuyu. All rights reserved.
 '''
 from decimal import Decimal
 import json, os, re, time, math, sys
-import pandas as pd
 import tkinter as tk
 from tkinter import filedialog
-import struct
+import struct, csv
 from check_sys import *
 
 '''多帧报文名称识别-内部变量'''
@@ -57,27 +56,6 @@ def read_json(path = 'bmsConfig·.json'):
     with open(path, "r", encoding='utf-8') as fp:
         data = json.load(fp)
         return (data)
-
-'''
- description: 读取BMS报文csv文件
- param {*} path 文件路径
- return {*} pandas.Dataframe 对象
-'''
-def get_csv_data(path:str):
-    header = ['序号','传输方向','时间标识','名称','帧ID','帧格式','帧类型','数据长度','数据(HEX)']
-    if os.path.getctime(path) > os.path.getmtime(path):
-        timeStamp = os.path.getmtime(path)
-    else:
-        timeStamp = os.path.getctime(path)
-    create_time = time.strftime("%Y-%m-%d ", time.localtime(timeStamp))
-    csv_df = pd.read_csv(path, encoding='GB2312', header=0, names=header)
-
-    header.append('BMS报文翻译')
-    csv_df = csv_df.reindex(columns=header)
-
-    # csv_df['时间标识'] = create_time + csv_df['时间标识']
-
-    return csv_df
 
 '''
  description: pgn==0xec00, 多帧报文的开始 回应 结束的识别
@@ -158,18 +136,18 @@ def hex_data_check(data):
     return True
 '''
  description: 解析帧ID 和 格式化报文源数据
- param {*} data pandas.series 对象 csv文件数据
+ param {*} '名称', '帧ID', '数据长度', '数据(HEX)'
  return {*} 报文名称
 '''
 def param_msg_name(data):
     # 检测 帧ID 和 实际数据 是否为十六进制
-    if hex_data_check([[data['帧ID'], '^0[xX][A-Fa-f0-9]{8}$|^[A-Fa-f0-9]{8}$'],
-                    [str(data['数据(HEX)']).replace(' ',''), '^[A-Fa-f0-9]+$']]) is False:  
+    if hex_data_check([[data[0], '^0[xX][A-Fa-f0-9]{8}$|^[A-Fa-f0-9]{8}$'],
+                    [str(data[3]).replace(' ',''), '^[A-Fa-f0-9]+$']]) is False:  
         return 'error'
-    if data['数据长度'] != len(str(data['数据(HEX)']).replace(' ',''))/2:  #检测文件中数据长度和数据实际长度是否一致
+    if data[2] != len(str(data[3]).replace(' ',''))/2:  #检测文件中数据长度和数据实际长度是否一致
         return 'error'
-    id = int(data['帧ID'], 16)          # 帧ID
-    dataRaw = int(data['数据(HEX)'].replace(' ',''), 16)      #数据(HEX)
+    id = int(data[1], 16)          # 帧ID
+    dataRaw = int(data[3].replace(' ',''), 16)      #数据(HEX)
     priority = (id >> 4*6) >> 2         # 优先级
     pgn = (id>>4*2) & 0xff00            # 获取组编号
     receive_send = (id & 0xffff)
@@ -500,20 +478,21 @@ def unsized_frame_analysis(json_dic, name, length, data, format_str, total_num):
         format_dic['tran_text'] += cell + ', '
     return format_dic['tran_text'][:-2]
 
+# ['名称', '数据长度', '数据(HEX)']
 def analysis_dataRaw(data):
-    if data['名称'].find("非标") != -1:
+    if data[0] == '非标':
         return '非标未识别'
-    elif data['名称'] == 'error':
+    elif data[0] == 'error':
         return '解析错误'
 
-    elif data['名称'].find("-") != -1:
-        name, index = data['名称'].split('-')
-        return more_frame_analysis(data_js[name], name, index, data['数据(HEX)'])
+    elif '-' in data[0]:
+        name, index = data[0].split('-')
+        return more_frame_analysis(data_js[name], name, index, data[2])
 
-    if data['名称'] in data_js.keys():
-        if 'max_count' in data_js[data['名称']].keys():
-            return f"{data['名称']}不定长报文未解析"
-        return one_frame_analysis(data_js[data['名称']], data[0], data[1], data['数据(HEX)'])
+    if data[0] in data_js.keys():
+        if 'max_count' in data_js[data[0]].keys():
+            return f"{data[0]}不定长报文未解析"
+        return one_frame_analysis(data_js[data[0]], data[0], data[1], data[2])
  
 '''
  description: 给名称一列赋值
@@ -521,7 +500,9 @@ def analysis_dataRaw(data):
  return {*} pandas.Dataframe
 '''
 def set_msg_name(df):
-    df['名称'] = df.loc[ : , ['名称', '帧ID', '数据长度', '数据(HEX)']].apply(param_msg_name, axis=1)
+    # df['名称'] = df.loc[ : , ['名称', '帧ID', '数据长度', '数据(HEX)']].apply(param_msg_name, axis=1)
+    for line in df:
+        line[3] = param_msg_name([line[3], line[4], line[7], line[8]])
     return df
 
 def set_meaning(df):
@@ -546,7 +527,9 @@ def set_meaning(df):
                                 data_js[key_data]['data'][key]['components'][index]['bytes/bit'][1]
                             )
 
-    df['BMS报文翻译'] = df.loc[ :, ['名称', '数据长度', '数据(HEX)']].apply(analysis_dataRaw, axis=1)
+    # df['BMS报文翻译'] = df.loc[ :, ['名称', '数据长度', '数据(HEX)']].apply(analysis_dataRaw, axis=1)
+    for line in df:
+        line.append(analysis_dataRaw([line[3], line[7], line[8]]))
     return df
 
 def options_to_dic(s_options, is_intNum):
@@ -566,6 +549,25 @@ def options_to_dic(s_options, is_intNum):
             options_dic[key_dic] = values
     return  options_dic
 
+def readCSV_GB2312(path):
+    with open(path, "r", encoding='GB2312') as file:
+        data = csv.reader(file)
+        list = []
+        for row in data:
+            list.append(row)
+        del list[0]
+    return list
+
+def write_csv(fileName, data, head):
+    f = open(fileName,'w', encoding='utf-8', newline='')
+    # 基于文件对象构建 csv写入对象
+    csv_writer = csv.writer(f)
+    csv_writer.writerow(head)
+    for line in data:
+        csv_writer.writerow(line)
+    f.close()
+    print('Save ', fileName, ' successfully!')
+
 if __name__ == "__main__":
     root = tk.Tk()  # 窗体对象
     root.withdraw()  # 窗体隐藏
@@ -574,7 +576,7 @@ if __name__ == "__main__":
     file_path, file_name = os.path.split(path)  #路径切割, 得到路径和文件名
 
     data_js = read_json('./config/bmsConfig.json')
-    csv_df = get_csv_data(path)
+    csv_df = readCSV_GB2312(path)
     bms_check(data_js)
 
     csv_df = set_msg_name(csv_df)
@@ -582,9 +584,12 @@ if __name__ == "__main__":
 
     csv_name = file_name.split('.')[0] + '-译.' + file_name.split('.')[-1]
     xlsx_name = file_name.split('.')[0] + '-译.xlsx'
-    csv_df.to_csv(os.path.join(file_path, csv_name), index =None)
+    write_csv(
+        os.path.join(file_path, csv_name), 
+        csv_df, 
+        ['序号','传输方向','时间标识','名称','帧ID','帧格式','帧类型','数据长度','数据(HEX)', 'BMS报文翻译']
+        )
     os.startfile(os.path.join(file_path, csv_name))
     sys.exit()
-    
-    # csv_df.to_excel(os.path.join(file_path, xlsx_name), index =None)
+
     
