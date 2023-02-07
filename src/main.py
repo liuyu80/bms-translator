@@ -573,7 +573,7 @@ if __name__ == "__main__":
     path_check(path)
     file_path, file_name = os.path.split(path)  #路径切割, 得到路径和文件名
 
-    data_js = read_json('./src/bmsConfig.json')
+    data_js = read_json('./config/bmsConfig.json')
     csv_df = get_csv_data(path)
     bms_check(data_js)
 
