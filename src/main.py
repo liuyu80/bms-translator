@@ -7,7 +7,7 @@
  Author       : liuyu
  Date         : 2023-01-07 09:04:55
 LastEditors: liuyu 2543722345@qq.com
-LastEditTime: 2023-02-07 17:17:52
+LastEditTime: 2023-02-07 17:44:14
  FilePath     : \\BMS-translator\\src\\main.py
  Copyright (C) 2023 liuyu. All rights reserved.
 '''
@@ -121,10 +121,10 @@ def find_bms_name(pgn, priority, receive_send, dataRaw):
                 if more_frame_config['count'] <= more_frame_config['total']:
                     return f"{more_frame_config['name']}-{more_frame_config['count']}"
                 else:
-                    return 'error'
+                    return f'error{more_frame_config}'
                 
     if receive_send not in [0xf456, 0x56f4]:
-        return 'error'
+        return f'error'
     return '非标'
 
 def hex_data_check(data):
@@ -141,7 +141,7 @@ def hex_data_check(data):
 '''
 def param_msg_name(data):
     # 检测 帧ID 和 实际数据 是否为十六进制
-    if hex_data_check([[data[0], '^0[xX][A-Fa-f0-9]{8}$|^[A-Fa-f0-9]{8}$'],
+    if hex_data_check([[data[1], '^0[xX][A-Fa-f0-9]{8}$|^[A-Fa-f0-9]{8}$'],
                     [str(data[3]).replace(' ',''), '^[A-Fa-f0-9]+$']]) is False:  
         return 'error'
     if data[2] != len(str(data[3]).replace(' ',''))/2:  #检测文件中数据长度和数据实际长度是否一致
@@ -500,9 +500,9 @@ def analysis_dataRaw(data):
  return {*} pandas.Dataframe
 '''
 def set_msg_name(df):
-    # df['名称'] = df.loc[ : , ['名称', '帧ID', '数据长度', '数据(HEX)']].apply(param_msg_name, axis=1)
     for line in df:
-        line[3] = param_msg_name([line[3], line[4], line[7], line[8]])
+        # 名称, 帧ID, 数据长度, 数据(HEX)
+        line[3] = param_msg_name([line[3], line[4], int(line[7]), line[8]]) 
     return df
 
 def set_meaning(df):
@@ -524,12 +524,10 @@ def set_meaning(df):
                     if 'options' in data_js[key_data]['data'][key]['components'][index].keys():
                         data_js[key_data]['data'][key]['components'][index]['options'] = \
                             options_to_dic(data_js[key_data]['data'][key]['components'][index]['options'],
-                                data_js[key_data]['data'][key]['components'][index]['bytes/bit'][1]
-                            )
-
-    # df['BMS报文翻译'] = df.loc[ :, ['名称', '数据长度', '数据(HEX)']].apply(analysis_dataRaw, axis=1)
+                                data_js[key_data]['data'][key]['components'][index]['bytes/bit'][1])
     for line in df:
-        line.append(analysis_dataRaw([line[3], line[7], line[8]]))
+        # 名称, 数据长度, 数据(HEX)
+        line.append(analysis_dataRaw([line[3], int(line[7]), line[8]]))
     return df
 
 def options_to_dic(s_options, is_intNum):
