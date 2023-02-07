@@ -568,6 +568,7 @@ def write_csv(fileName, data, head):
 
 if __name__ == "__main__":
     root = tk.Tk()  # 窗体对象
+    root.iconbitmap('./config/bms.ico')
     root.withdraw()  # 窗体隐藏
     path = tk.filedialog.askopenfilename()
     path_check(path)
