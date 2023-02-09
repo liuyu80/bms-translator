@@ -2,7 +2,7 @@
 
 ## 简介
 本项目使用python语言开发, 自动将软件`CANalyst`保存的BMS数据进行翻译。
-本项目终极目标: 可以翻译任何CANalyst保存的数据
+本项目终极目标: 通过更改添加config文件，可以翻译任何CANalyst保存的数据
 
 ## 快速使用
 1. 点击下载 [bmsTranslator_v0.2.0.zip](https://gitee.com/liuyu-git/bms-translator/releases/download/v0.2.0/bmsTranslator_v0.2.0.zip)
