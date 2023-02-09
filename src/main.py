@@ -4,18 +4,19 @@
 '''
  Description  : BMS报文翻译官
  Version      : 1.0
- Author       : liuyu
- Date         : 2023-01-07 09:04:55
-LastEditors: liuyu 2543722345@qq.com
-LastEditTime: 2023-02-07 17:44:14
- FilePath     : \\BMS-translator\\src\\main.py
- Copyright (C) 2023 liuyu. All rights reserved.
+ Author       : liuyu 2543722345@qq.com
+ Date         : 2023-02-09 09:17:00
+ LastEditors  : liuyu 2543722345@qq.com
+ LastEditTime : 2023-02-09 13:59:03
+ FilePath     : \\bms-translator\\src\\main.py
+ Copyright (C) 2023 by liuyu. All rights reserved.
 '''
+
 from decimal import Decimal
 import json, os, re, time, math, sys
 import tkinter as tk
 from tkinter import filedialog
-import struct, csv
+import struct, csv, chardet
 from check_sys import *
 
 '''多帧报文名称识别-内部变量'''
@@ -127,19 +128,25 @@ def find_bms_name(pgn, priority, receive_send, dataRaw):
         return f'error'
     return '非标'
 
-def hex_data_check(data):
+'''
+ description: 检测数据是否为十六进制
+ param {list} data = [数据, 十六进制正则表达式]
+ return {bool}
+'''
+def hex_data_check(data: list) -> bool:
     for line in data:
         if re.match(line[1], line[0]) == None:
             return False
     if len(data[1][0])%2 != 0:
         return False
     return True
+
 '''
  description: 解析帧ID 和 格式化报文源数据
- param {*} '名称', '帧ID', '数据长度', '数据(HEX)'
- return {*} 报文名称
+ param {list} '名称', '帧ID', '数据长度', '数据(HEX)'
+ return {string} 报文名称
 '''
-def param_msg_name(data):
+def param_msg_name(data:list):
     # 检测 帧ID 和 实际数据 是否为十六进制
     if hex_data_check([[data[1], '^0[xX][A-Fa-f0-9]{8}$|^[A-Fa-f0-9]{8}$'],
                     [str(data[3]).replace(' ',''), '^[A-Fa-f0-9]+$']]) is False:  
@@ -154,7 +161,17 @@ def param_msg_name(data):
 
     return find_bms_name(pgn, priority, receive_send, dataRaw)
 
-def bytes_translation(json_dic, format_dic, key, byte, index):
+
+'''
+ description: 以字节划分的解析字段的翻译
+ param {dict} json_dic: config.json 下的该报文的 对应的字段配置
+ param {dict} format_dic: 该条报文下的解析基本信息
+ param {str} key: 翻译报文下的具体字段名称; None: 报文中components字段翻译, 避免翻译多次字段名称
+ param {int} byte: 对应具体字段的 数据
+ param {int} index: 以匹配字符为参考系, 该字段在数据包中的位置
+ return {str} 该字段的翻译结果
+'''
+def bytes_translation(json_dic:dict, format_dic:dict, key:str, byte:int, index:int):
     text = ''
     # 选项翻译
     if 'options' in json_dic.keys():
@@ -241,7 +258,14 @@ def bytes_translation(json_dic, format_dic, key, byte, index):
         text = f'{key}: 未解析; '
     return str(text)
 
-def schema_to_str(schema, cell_list, key):
+'''
+ description: 将components的解析结果，按照schema翻译模板进行翻译
+ param {list} schema: [翻译顺序1: 正序; -1: 逆序, 翻译模板]
+ param {list} cell_list: [components的解析结果]
+ param {str} key: 字段名称
+ return {str} 翻译结果
+'''
+def schema_to_str(schema:list, cell_list:list, key:str):
     text = ''
     way = int(schema[0])
     tran_packs = schema[1].split('~')
@@ -251,10 +275,19 @@ def schema_to_str(schema, cell_list, key):
     text += f'{tran_packs[-1]}; '
     return text
 
-def bit_translation(json_dic, key, byte, bit_Lenthg, range_list):
+'''
+ description: 以位划分的解析字段的翻译
+ param {dict} json_dic: 报文字段下的配置
+ param {str} key: 字段名称
+ param {int} byte: 字段数据, 这里是字节数据
+ param {int} bit_Lenthg: 字节数据的长度
+ param {list} range_list: 位数据在字节中的范围
+ return {str} 翻译结果
+'''
+def bit_translation(json_dic:dict, key:str, byte:int, bit_Lenthg:int, range_list:list):
     text = ''
     bit_fun_str =  '0b'+ '0'* (bit_Lenthg - range_list[1])+ '1'* (range_list[1]-range_list[0]) + '0'* range_list[0] 
-    bit_int = (byte & int(bit_fun_str, 2))>> range_list[0]
+    bit_int = (byte & int(bit_fun_str, 2)) >> range_list[0] # 位运算 截取该字段的数据
     
     if 'options' in json_dic.keys():  
         if str(bit_int) in json_dic['options'].keys():
@@ -283,8 +316,16 @@ def bit_translation(json_dic, key, byte, bit_Lenthg, range_list):
             return '未解析'
     else:
         return text
-    
-def translation_fun(json_dic, format_dic, data_keys, pack) ->str:
+
+'''
+ description: 将解析好的数据包 依次 按照config配置进行翻译
+ param {dict} json_dic: 该报文的配置信息
+ param {dict} format_dic: 该报文的解析信息
+ param {list} data_keys: 报文下的字段名称列表
+ param {list} pack: 对应该报文的数据包列表
+ return {str} 该条报文的翻译结果
+'''
+def translation_fun(json_dic:dict, format_dic:dict, data_keys:list, pack:list) ->str:
     text = ''
     for index in range(len(pack)):
         key = data_keys[index]
@@ -302,8 +343,13 @@ def translation_fun(json_dic, format_dic, data_keys, pack) ->str:
         else:
             return f"json_error {json_dic['data'][key]['bytes/bit']}, {format_dic['format_str']}, {format_dic['name']}"
     
-    return text[:-2]  # 去掉翻译后最后一个;
+    return text[:-2]  # 去掉翻译后最后一个 "; "
 
+'''
+ description: "bytes/bit"字段下的数值, 更改成位的形式
+ param {str} num: "bytes/bit"字段下的数值
+ return {int} 位
+'''
 def hexToBit(num:str) -> int:
     if isinstance(num, float) :
         str_nums = str(num).split('.')
@@ -320,7 +366,13 @@ def hexToBit(num:str) -> int:
         else:
             return int(str_nums[0]) * 8 + int(str_nums[1])
 
-def bit_overturn(obj, num) -> str:
+'''
+ description: 将字符串obj前两位去掉, 按照步数为2进行划分, 将划分结果颠倒并补全长度, 使之长度为num
+ param {str} obj: 要划分颠倒的字符串
+ param {int} num: 设置返回字符串的长度
+ return {str}
+'''
+def bit_overturn(obj:str, num:int) -> str:
     s_list = [(obj)[i:i+2] for i in range(2,len(obj),2)]
     s_str =  ''.join(s_list[::-1])
     if s_str == '0':
@@ -332,11 +384,26 @@ def bit_overturn(obj, num) -> str:
     else:
         return None
 
-def cut(obj, sec):
+'''
+ description: 将字符串obj 按照给定长度划分成列表
+ param {str} obj: 字符串
+ param {int} sec: 步长
+ return {list} 分隔后的列表
+'''
+def cut(obj:str, sec:int) ->list:
     obj = obj.replace(' ','')
     return [obj[i:i+sec] for i in range(0,len(obj),sec)]
 
-def one_frame_analysis(json_dic, name, length, dataRaw):
+
+'''
+ description: 单帧报文的解析
+ param {dict} json_dic: 该报文的配置信息
+ param {str} name: 该报文的名称
+ param {int} length: 该报文的长度
+ param {str} dataRaw: 该报文未解析的数据
+ return {str} 翻译结果
+'''
+def one_frame_analysis(json_dic:dict, name:str, length:int, dataRaw:str):
     format_dic = {
         'total_bytes': json_dic['total_bytes'],
         'length': int(length),
@@ -362,10 +429,19 @@ def one_frame_analysis(json_dic, name, length, dataRaw):
     pack = list(struct.unpack(format_dic['format_str'], data))
     
     format_dic['tran_text'] += translation_fun(json_dic, format_dic, data_keys, pack)
-    # return (pack ,format_dic['format_list'] ,format_dic['format_str'], format_dic['tran_text'])
+    # return (pack ,format_dic['format_list'] ,format_dic['format_str'], format_dic['tran_text']) #调试用
     return format_dic['tran_text']
 
-def more_frame_analysis(json_dic, name, index, dataRaw):
+
+'''
+ description: 多帧报文的翻译
+ param {dict} json_dic: 该报文的配置信息
+ param {str} name: 该报文的名称
+ param {str} index: 该数据在 多帧报文的位置
+ param {str} dataRaw: 未解析的数据
+ return {str} 翻译结果
+'''
+def more_frame_analysis(json_dic:dict, name:str, index:str, dataRaw:str):
     more_analysis_config['name'] = name
     text = ''
     if index in ['start', 'reply', 'end']:
@@ -389,45 +465,54 @@ def more_frame_analysis(json_dic, name, index, dataRaw):
     elif index == 'end':
         if int(data_list[3], 16) == more_analysis_config['total_num'] and \
             int(data_list[2]+data_list[1], 16) == more_analysis_config['total_bytes']: 
-            more_analysis_config['name'] = ''
-            more_analysis_config['total_num'] = None
-            more_analysis_config['total_bytes'] = None
             text += f'{name}-{index}-> 接收完成，总包数: {int(data_list[3], 16)}, 总字节数: {int(data_list[2]+data_list[1], 16)}'
-            return text
         else:
-            more_analysis_config['name'] = ''
-            more_analysis_config['total_num'] = None
-            more_analysis_config['total_bytes'] = None
             text += f'{name}-{index}-> 数据错误，总包数: {int(data_list[3], 16)}, 总字节数: {int(data_list[2]+data_list[1], 16)}'
-            return text
+        # 多帧报文的最后一帧，全局变量归零
+        more_analysis_config['name'] = ''
+        more_analysis_config['total_num'] = None
+        more_analysis_config['total_bytes'] = None
+        return text
     else:
+        # index是数值，将未解析的数据放在一起
         if int(index) < more_analysis_config['total_num']:
             more_analysis_config['data'] += dataRaw[2:]
             return f'{name}报文-> 第{index}包'
+        # 最后一包数据，多帧数据合并 调用单帧报文解析函数
         elif int(index) == more_analysis_config['total_num']:
             more_analysis_config['data'] += dataRaw[2:]
             length = more_analysis_config['total_bytes']
             data = more_analysis_config['data'][:(length)*2+length]
             more_analysis_config['data'] = ''
+            # 如果是不定长度的报文，多帧数据合并 调用 unsized_frame_analysis函数
             if 'max_count' in json_dic.keys():
                 json_dic['total_bytes'] = more_analysis_config['total_bytes']
+                #得到解析不定长报文的 解析信息
                 json_dic['format_list'], format_str, total_num = unsized_format(json_dic)
-                return unsized_frame_analysis(json_dic, name, length, data, format_str, total_num)
+                return unsized_frame_analysis(json_dic, name, data, format_str)
             return one_frame_analysis(json_dic, name, length, data)
         else:
             return '包数不正确, 解析错误'
 
-def format_list_to_str(format_list, total_bytes, length, json_dic):
+'''
+ description: 将各支段的间隙 转换成 解析匹配字符
+ param {list} format_list: 给字段的位置列表
+ param {int} total_bytes: 配置文件中的最大字段
+ param {int} length: 报文实际长度
+ param {dict} json_dic: 该报文的配置信息
+ return {tuple} (解析匹配字符, 解析匹配字符含有的字节长度)
+'''
+def format_list_to_str(format_list:list, total_bytes:int, length:int, json_dic:dict):
     total_num = 0
     format_str = ''
-    min_len = min([length, total_bytes])
+    min_len = min([length, total_bytes]) # 取最小长度
     for num ,cell in enumerate(format_list):
         if min_len == total_num:
             break
         if cell == format_list[-1]:
             values = list(json_dic.keys())
-            values = math.ceil(json_dic[values[-1]]['bytes/bit'][1])
-            
+            # 向上取整
+            values = math.ceil(json_dic[values[-1]]['bytes/bit'][1]) 
             format_str += f'{values}s'
         else:
             values = format_list[num+1]-format_list[num]
@@ -435,7 +520,12 @@ def format_list_to_str(format_list, total_bytes, length, json_dic):
         total_num += values
     return (format_str, total_num)
 
-def unsized_format(json_dic):
+'''
+ description: 获得不定长度的报文 解析匹配信息
+ param {list} json_dic: 报文配置信息, 其中total_bytes是报文的实际长度
+ return {*}
+'''
+def unsized_format(json_dic:list):
     format_list = [1]
     temp_list = []
     total_bytes = 0
@@ -451,10 +541,18 @@ def unsized_format(json_dic):
 
     return (format_list, format_str, total_num)
 
-def unsized_frame_analysis(json_dic, name, length, data, format_str, total_num):
+'''
+ description: 不定长度报文的解析和翻译
+ param {dict} json_dic: 该报文的配置信息
+ param {str} name: 该报文的名称
+ param {str} data: 该报文未解析的数据
+ param {str} format_str: 该报文的 解析匹配字符
+ return {*} 不定长度报文的翻译
+'''
+def unsized_frame_analysis(json_dic:dict, name:str, data:str, format_str:str):
     format_dic = {
         'total_bytes': json_dic['total_bytes'],
-        'length': int(length),
+        'length': json_dic['total_bytes'],
         'format_str': format_str,
         "format_list": json_dic['format_list'],
         'data': str(data),
@@ -462,9 +560,8 @@ def unsized_frame_analysis(json_dic, name, length, data, format_str, total_num):
         'unsized': True,
         'tran_text': f'{name}报文-> ',
     }
+    length, total_num = json_dic['total_bytes'], json_dic['total_bytes']
     text = ''
-    if length != total_num:
-        return f'解析失败-长度不一致{format_str}'
     data_keys = list(json_dic['data'].keys()) * int(len(cut(format_str, 2))/len(list(json_dic['data'].keys())))
     data = data.replace(' ','')[:total_num*2]
     data = int(data, 16).to_bytes(total_num, byteorder="big", signed=False)
@@ -478,8 +575,13 @@ def unsized_frame_analysis(json_dic, name, length, data, format_str, total_num):
         format_dic['tran_text'] += cell + ', '
     return format_dic['tran_text'][:-2]
 
-# ['名称', '数据长度', '数据(HEX)']
-def analysis_dataRaw(data):
+
+'''
+ description: 通过名称一列的内容给数据翻译
+ param {*} data ['名称', '数据长度', '数据(HEX)']
+ return {*} 翻译结果
+'''
+def analysis_dataRaw(data:list):
     if data[0] == '非标':
         return '非标未识别'
     elif data[0] == 'error':
@@ -496,8 +598,8 @@ def analysis_dataRaw(data):
  
 '''
  description: 给名称一列赋值
- param {*} df pandas.Dataframe 对象 csv文件的数据
- return {*} pandas.Dataframe
+ param {*} df csv文件的数据
+ return {*} 文件数据
 '''
 def set_msg_name(df):
     for line in df:
@@ -505,7 +607,14 @@ def set_msg_name(df):
         line[3] = param_msg_name([line[3], line[4], int(line[7]), line[8]]) 
     return df
 
+'''
+ description: 在报文下生成format_list字段为之后生成 解析匹配字符串提供方便, 
+              给options字段解析成字典方便翻译工作, 给名称一列赋值
+ param {*} df 文件数据
+ return {*} 加上翻译列的文件数据
+'''
 def set_meaning(df):
+    # 生成各报文 各支段下的位置间隙列表
     for key_data in data_js.keys():
         data_js[key_data]['format_list'] = []
         for key in data_js[key_data]['data'].keys():
@@ -513,12 +622,11 @@ def set_meaning(df):
                 continue
             else:
                 data_js[key_data]['format_list'].append(int(data_js[key_data]['data'][key]['bytes/bit'][0]))
-
+    # 将options字段的字符串 解析成 字典
     for key_data in data_js.keys():
         for key in data_js[key_data]['data'].keys():
             if "options" in data_js[key_data]['data'][key].keys():
                 data_js[key_data]['data'][key]['options'] = options_to_dic(data_js[key_data]['data'][key]['options'], data_js[key_data]['data'][key]['bytes/bit'][1])
-                
             if 'components' in data_js[key_data]['data'][key].keys():
                 for index in range(len(data_js[key_data]['data'][key]['components'])):
                     if 'options' in data_js[key_data]['data'][key]['components'][index].keys():
@@ -530,15 +638,23 @@ def set_meaning(df):
         line.append(analysis_dataRaw([line[3], int(line[7]), line[8]]))
     return df
 
-def options_to_dic(s_options, is_intNum):
+'''
+ description: 将options字段的字符串 解析成 字典
+ param {str} s_options: options字段的字符串
+ param {int} is_intNum: options字段所占用的大小
+ return {*} 解析好的字典
+'''
+def options_to_dic(s_options:str, is_intNum:int):
     options = s_options.replace(' ','').split(';')
     options_dic = {}
+    # 如果占用大小是字节
     if isinstance(is_intNum, int):
         s_str = '0x'
         for cell in options:
             key_dic, values = cell.split(':')
             key_dic = str(int((s_str + key_dic), 16))
             options_dic[key_dic] = values
+    # 如果占用大小是位
     else: 
         s_str = '0b'
         for cell in options:
@@ -547,16 +663,28 @@ def options_to_dic(s_options, is_intNum):
             options_dic[key_dic] = values
     return  options_dic
 
-def readCSV_GB2312(path):
-    with open(path, "r", encoding='GB2312') as file:
-        data = csv.reader(file)
-        list = []
+'''
+ description: 读取csv文件
+ param {str} path: 文件路径
+ return {list} 文件数据 
+'''
+def get_CSV_data(path:str):
+    with open(path, "r", encoding=get_text_encoding(path)) as file:
+        csv_reader = csv.reader(file)
+        data = []
         for row in data:
-            list.append(row)
+            data.append(row)
         del list[0]
-    return list
+    return data
 
-def write_csv(fileName, data, head):
+'''
+ description: 将解析翻译好的文件数据, 以“UTF-8”编码重新写入一个csv格式的文件
+ param {str} fileName: 新的文件名
+ param {list} data: 文件数据
+ param {list} head: 文件的表头
+ return {*} None
+'''
+def write_csv(fileName:str, data:list, head:list):
     f = open(fileName,'w', encoding='utf-8', newline='')
     # 基于文件对象构建 csv写入对象
     csv_writer = csv.writer(f)
@@ -566,29 +694,42 @@ def write_csv(fileName, data, head):
     f.close()
     print('Save ', fileName, ' successfully!')
 
+'''
+ description: 通过文件表头自动判断文件的编码，并返回
+ param {str} path: 文件路径
+ return {str} 文件编码
+'''
+def get_text_encoding(path:str):
+    with open(path, 'rb') as f:
+        text = f.readline()
+        resp = chardet.detect(text)
+    return resp['encoding']
+
+
 if __name__ == "__main__":
     root = tk.Tk()  # 窗体对象
     root.iconbitmap('./config/bms.ico')
     root.withdraw()  # 窗体隐藏
     path = tk.filedialog.askopenfilename()
+    # 文件路径自检
     path_check(path)
     file_path, file_name = os.path.split(path)  #路径切割, 得到路径和文件名
 
     data_js = read_json('./config/bmsConfig.json')
-    csv_df = readCSV_GB2312(path)
+    csv_df = get_CSV_data(path)
+    # BMS 配置文件自检
     bms_check(data_js)
 
-    csv_df = set_msg_name(csv_df)
-    csv_df = set_meaning(csv_df)
+    csv_df = set_msg_name(csv_df)  # 获取名称列
+    csv_df = set_meaning(csv_df)   # 获取翻译列
 
     csv_name = file_name.split('.')[0] + '-译.' + file_name.split('.')[-1]
-    xlsx_name = file_name.split('.')[0] + '-译.xlsx'
     write_csv(
         os.path.join(file_path, csv_name), 
         csv_df, 
         ['序号','传输方向','时间标识','名称','帧ID','帧格式','帧类型','数据长度','数据(HEX)', 'BMS报文翻译']
         )
-    os.startfile(os.path.join(file_path, csv_name))
+    os.startfile(os.path.join(file_path, csv_name)) # 自动使用系统默认应用打开该文件
     sys.exit()
 
     
