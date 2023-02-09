@@ -7,7 +7,7 @@
  Author       : liuyu 2543722345@qq.com
  Date         : 2023-02-09 09:17:00
  LastEditors  : liuyu 2543722345@qq.com
- LastEditTime : 2023-02-09 13:59:03
+ LastEditTime : 2023-02-09 14:08:38
  FilePath     : \\bms-translator\\src\\main.py
  Copyright (C) 2023 by liuyu. All rights reserved.
 '''
@@ -672,9 +672,9 @@ def get_CSV_data(path:str):
     with open(path, "r", encoding=get_text_encoding(path)) as file:
         csv_reader = csv.reader(file)
         data = []
-        for row in data:
-            data.append(row)
-        del list[0]
+        for line in csv_reader:
+            data.append(line)
+        del data[0]
     return data
 
 '''
