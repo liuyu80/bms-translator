@@ -708,8 +708,8 @@ def get_text_encoding(path:str):
 
 if __name__ == "__main__":
     root = tk.Tk()  # 窗体对象
-    root.iconbitmap('./config/bms.ico')
     root.withdraw()  # 窗体隐藏
+    root.iconbitmap('./config/bms.ico')
     path = tk.filedialog.askopenfilename()
     # 文件路径自检
     path_check(path)
