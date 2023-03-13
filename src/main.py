@@ -7,7 +7,7 @@
  Author       : liuyu 2543722345@qq.com
  Date         : 2023-02-09 09:17:00
  LastEditors  : liuyu 2543722345@qq.com
- LastEditTime : 2023-02-09 14:08:38
+ LastEditTime : 2023-03-13 17:46:21
  FilePath     : \\bms-translator\\src\\main.py
  Copyright (C) 2023 by liuyu. All rights reserved.
 '''
@@ -184,7 +184,9 @@ def bytes_translation(json_dic:dict, format_dic:dict, key:str, byte:int, index:i
             return f"{key}: 解析错误-bytesOptions; "
     # 比率 偏移量 计算 翻译       
     elif 'ratio' in json_dic.keys():
+        byte = int(str(byte), 16)
         values = Decimal(str(byte)) * Decimal(str(json_dic['ratio'])) + Decimal(str(json_dic['offset']))
+        
         if key:
             text += f"{key}: {values}{json_dic['unit_symbol']}; "
         else:
