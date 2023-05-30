@@ -171,7 +171,7 @@ def param_msg_name(data:list):
  param {int} index: 以匹配字符为参考系, 该字段在数据包中的位置
  return {str} 该字段的翻译结果
 '''
-def bytes_translation(json_dic:dict, format_dic:dict, key:str, byte:int, index:int):
+def bytes_translation(json_dic:dict, format_dic:dict, key:str, byte:int, index:int): 
     text = ''
     # 选项翻译
     if 'options' in json_dic.keys():
@@ -184,9 +184,11 @@ def bytes_translation(json_dic:dict, format_dic:dict, key:str, byte:int, index:i
             return f"{key}: 解析错误-bytesOptions; "
     # 比率 偏移量 计算 翻译       
     elif 'ratio' in json_dic.keys():
-        byte = int(str(byte), 16)
-        values = Decimal(str(byte)) * Decimal(str(json_dic['ratio'])) + Decimal(str(json_dic['offset']))
-        
+        try:
+            values = Decimal(str(byte)) * Decimal(str(json_dic['ratio'])) + Decimal(str(json_dic['offset']))
+        except:
+            return f"{key}: 解析错误"
+    
         if key:
             text += f"{key}: {values}{json_dic['unit_symbol']}; "
         else:
@@ -447,7 +449,7 @@ def more_frame_analysis(json_dic:dict, name:str, index:str, dataRaw:str):
     more_analysis_config['name'] = name
     text = ''
     if index in ['start', 'reply', 'end']:
-        if len(dataRaw) != 8*2+7:
+        if len(dataRaw.replace(' ', '')) != 8*2:
             text += f'{name}-{index}-长度解析错误'
             return text
         else:
@@ -480,6 +482,7 @@ def more_frame_analysis(json_dic:dict, name:str, index:str, dataRaw:str):
         if int(index) < more_analysis_config['total_num']:
             more_analysis_config['data'] += dataRaw[2:]
             return f'{name}报文-> 第{index}包'
+        
         # 最后一包数据，多帧数据合并 调用单帧报文解析函数
         elif int(index) == more_analysis_config['total_num']:
             more_analysis_config['data'] += dataRaw[2:]
@@ -725,7 +728,8 @@ if __name__ == "__main__":
     csv_df = set_msg_name(csv_df)  # 获取名称列
     csv_df = set_meaning(csv_df)   # 获取翻译列
 
-    csv_name = file_name.split('.')[0] + '-译.' + file_name.split('.')[-1]
+    
+    csv_name = ''.join(file_name.split('.')[:-1])  + '-译.' + file_name.split('.')[-1]
     write_csv(
         os.path.join(file_path, csv_name), 
         csv_df, 
