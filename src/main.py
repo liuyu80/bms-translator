@@ -48,6 +48,8 @@ unsized_frame_config = {
 }
 global data_js
 
+csv_header = []
+
 '''
  description: 读取json配置文件
  param {*} path 文件路径
@@ -67,6 +69,7 @@ def read_json(path = 'bmsConfig·.json'):
  return {*} 识别的多帧报文名称
 '''
 def set_more_frame_name(pgn, bit, dataRaw, priority):
+    global data_js
     if bit == 0x10:
         more_frame_config['start'] = True
         more_frame_config['end'] = False
@@ -106,6 +109,7 @@ def set_more_frame_name(pgn, bit, dataRaw, priority):
  return {*} 识别报文的名字
 '''
 def find_bms_name(pgn, priority, receive_send, dataRaw):
+    global data_js
     if pgn == 0xec00: 
         pgn = dataRaw & 0xffff
         control_bit = dataRaw >> 4*14
@@ -150,9 +154,9 @@ def param_msg_name(data:list):
     # 检测 帧ID 和 实际数据 是否为十六进制
     if hex_data_check([[data[1], '^0[xX][A-Fa-f0-9]{8}$|^[A-Fa-f0-9]{8}$'],
                     [str(data[3]).replace(' ',''), '^[A-Fa-f0-9]+$']]) is False:  
+        # print('hex_data_check is error', data[1], data[3])
         return 'error'
-    if data[2] != len(str(data[3]).replace(' ',''))/2:  #检测文件中数据长度和数据实际长度是否一致
-        return 'error'
+
     id = int(data[1], 16)          # 帧ID
     dataRaw = int(data[3].replace(' ',''), 16)      #数据(HEX)
     priority = (id >> 4*6) >> 2         # 优先级
@@ -172,6 +176,7 @@ def param_msg_name(data:list):
  return {str} 该字段的翻译结果
 '''
 def bytes_translation(json_dic:dict, format_dic:dict, key:str, byte:int, index:int): 
+    global data_js
     text = ''
     # 选项翻译
     if 'options' in json_dic.keys():
@@ -330,6 +335,7 @@ def bit_translation(json_dic:dict, key:str, byte:int, bit_Lenthg:int, range_list
  return {str} 该条报文的翻译结果
 '''
 def translation_fun(json_dic:dict, format_dic:dict, data_keys:list, pack:list) ->str:
+    global data_js
     text = ''
     for index in range(len(pack)):
         key = data_keys[index]
@@ -587,6 +593,7 @@ def unsized_frame_analysis(json_dic:dict, name:str, data:str, format_str:str):
  return {*} 翻译结果
 '''
 def analysis_dataRaw(data:list):
+    global data_js
     if data[0] == '非标':
         return '非标未识别'
     elif data[0] == 'error':
@@ -594,22 +601,31 @@ def analysis_dataRaw(data:list):
 
     elif '-' in data[0]:
         name, index = data[0].split('-')
-        return more_frame_analysis(data_js[name], name, index, data[2])
+        try:
+            s_re =  more_frame_analysis(data_js[name], name, index, data[2])
+        except:
+            s_re = '解析失败-002'
+        return s_re
 
     if data[0] in data_js.keys():
         if 'max_count' in data_js[data[0]].keys():
             return f"{data[0]}不定长报文未解析"
-        return one_frame_analysis(data_js[data[0]], data[0], data[1], data[2])
- 
+        try:
+            s_re =  one_frame_analysis(data_js[data[0]], data[0], data[1], data[2])
+        except:
+            s_re = '解析失败-001'
+        return s_re
 '''
  description: 给名称一列赋值
  param {*} df csv文件的数据
  return {*} 文件数据
 '''
-def set_msg_name(df):
+def set_msg_name(df, id_place, data_place):
+    data_place = int(data_place)
+    id_place = int(id_place)
     for line in df:
         # 名称, 帧ID, 数据长度, 数据(HEX)
-        line[3] = param_msg_name([line[3], line[4], int(line[7]), line[8]]) 
+        line.insert(id_place-1, param_msg_name(['', line[id_place-1], int(len(line[data_place-1].replace(' ', ''))), line[data_place-1]]))
     return df
 
 '''
@@ -618,7 +634,10 @@ def set_msg_name(df):
  param {*} df 文件数据
  return {*} 加上翻译列的文件数据
 '''
-def set_meaning(df):
+def set_meaning(df, id_place, data_place):
+    global data_js
+    data_place = int(data_place)
+    id_place = int(id_place)
     # 生成各报文 各支段下的位置间隙列表
     for key_data in data_js.keys():
         data_js[key_data]['format_list'] = []
@@ -640,7 +659,7 @@ def set_meaning(df):
                                 data_js[key_data]['data'][key]['components'][index]['bytes/bit'][1])
     for line in df:
         # 名称, 数据长度, 数据(HEX)
-        line.append(analysis_dataRaw([line[3], int(line[7]), line[8]]))
+        line.append(analysis_dataRaw([line[id_place-1], int(len(line[data_place].replace(' ', ''))), line[data_place]]))
     return df
 
 '''
@@ -674,11 +693,13 @@ def options_to_dic(s_options:str, is_intNum:int):
  return {list} 文件数据 
 '''
 def get_CSV_data(path:str):
+    global csv_header
     with open(path, "r", encoding=get_text_encoding(path)) as file:
         csv_reader = csv.reader(file)
         data = []
         for line in csv_reader:
             data.append(line)
+        csv_header = data[0]
         del data[0]
     return data
 
@@ -709,6 +730,17 @@ def get_text_encoding(path:str):
         text = f.readline()
         resp = chardet.detect(text)
     return resp['encoding']
+
+def main_prase(csv_df, id_place, data_place):
+    global data_js
+    data_js = read_json('./config/bmsConfig.json')
+
+    bms_check(data_js)
+
+    csv_df = set_msg_name(csv_df, id_place, data_place)  # 获取名称列
+    csv_df = set_meaning(csv_df, id_place, data_place)   # 获取翻译列
+
+    return csv_df
 
 
 
