@@ -5,6 +5,7 @@ from tkinter.messagebox import *
 from main import *
 import json
 import os
+import time
 import sys
 
 
@@ -15,12 +16,20 @@ file_path = ''
 
 
 def creat_window():
-    win_width = str(int(root.winfo_screenwidth() / 4))
-    win_height = str(int(root.winfo_screenheight() / 4))
+    win_width = int(root.winfo_screenwidth() / 4)
+    win_height = int(root.winfo_screenheight() / 4)
     root.title('BMS翻译官 ' + version)
-    root.geometry(f'{win_width}x{win_height}')
+    root.geometry(f'{win_width}x{win_height}+{int(root.winfo_screenwidth()/3)}+{int(root.winfo_screenheight()/3)}')
     return [win_width, win_height]
 
+def save_config():
+    config['timestamp'] = int(time.time())
+    config['id_place'] = id_place.get()
+    config['data_place'] = data_place.get()
+    config['split'] = split_entry.get()
+    config['valid_row'] = valid_entry.get()
+    with open('./config/config', 'w', encoding='utf-8') as fp:
+        json.dump(config, fp)
 
 def creat_entry():
     # 帧ID位置 的选项
@@ -124,6 +133,7 @@ def creat_csv(path, data_df, splite_s):
 
 
 def parse_file():
+    save_config()
     id = id_place.get()
     data_p = data_place.get()
     split_s = split_entry.get()
@@ -142,17 +152,15 @@ def parse_file():
         if ui_path_check(file_path):
             print('正在解析')
             if split_s[0] == 't':
-                df_data = read_csv(file_path, '\t', int(valid_s))
-                if len(df_data[3]) < 2:
-                    showerror('错误', '请选择正确的文件')
-                df_data = main_prase(df_data, id, data_p)
-                creat_csv(file_path, df_data, '\t')
+                split_s = '\t'
             elif split_s[0] == '英':
-                df_data = read_csv(file_path, ',', int(valid_s))
-                if len(df_data[3]) < 2:
-                    showerror('错误', '请选择正确的文件')
-                df_data = main_prase(df_data, id, data_p)
-                creat_csv(file_path, df_data, ',')
+                split_s = ','
+
+            df_data = read_csv(file_path, split_s, int(valid_s))
+            if len(df_data[3]) < 2:
+                showerror('错误', '请选择正确的文件')
+            df_data = main_prase(df_data, id, data_p)
+            creat_csv(file_path, df_data, split_s)
 
 
 def creat_btn():
@@ -163,15 +171,44 @@ def creat_btn():
     parse_btn.place(relx=0.5, y=210)
 
 
+def read_config(path):
+    if os.path.exists(path):
+        with open(path, "r", encoding='utf-8') as fp:
+            data = json.load(fp)
+        return (data)
+    else:
+        config = {
+            "timestamp": 1,
+            "id_place": 3,
+            "data_place": 9,
+            "split": "tab(\\t)",
+            "valid_row": 2
+        }
+        with open(path, 'w', encoding='utf-8') as fp:
+            json.dump(config, fp)
+        return config
+
+def set_config(config):
+    if int(time.time()) - config['timestamp'] < 500: 
+        id_place.set(config['id_place'])
+        data_place.set(config['data_place'])
+        split_entry.set(config['split'])
+        valid_entry.set(config['valid_row'])
+    else:
+        id_place.set(3)
+        data_place.set(9)
+
+
 if __name__ == "__main__":
     root = Tk()
     root.resizable(False, False)
-    root.iconbitmap('./config/bms.ico')
+    if os.path.exists('./config/bms.ico'):
+        root.iconbitmap('./config/bms.ico')
     win_width, win_height = creat_window()
     id_place, data_place, split_entry, valid_entry, file_path_entry = creat_entry()
-    id_place.set(5)
-    data_place.set(9)
 
+    config = read_config('./config/config')
+    set_config(config)
     creat_btn()
-
     root.mainloop()
+ 
