@@ -711,6 +711,7 @@ def get_text_encoding(path:str):
     return resp['encoding']
 
 
+
 if __name__ == "__main__":
     root = tk.Tk()  # 窗体对象
     root.withdraw()  # 窗体隐藏
@@ -728,7 +729,7 @@ if __name__ == "__main__":
     csv_df = set_msg_name(csv_df)  # 获取名称列
     csv_df = set_meaning(csv_df)   # 获取翻译列
 
-    
+    # 生成新的文件 保存解析后的数据
     csv_name = ''.join(file_name.split('.')[:-1])  + '-译.' + file_name.split('.')[-1]
     write_csv(
         os.path.join(file_path, csv_name), 
