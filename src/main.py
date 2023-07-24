@@ -15,7 +15,7 @@
 from decimal import Decimal
 import json, os, re, time, math, sys
 import tkinter as tk
-from tkinter import filedialog
+from tkinter import filedialog, messagebox
 import struct, csv, chardet
 from check_sys import *
 
@@ -56,9 +56,13 @@ csv_header = []
  return {*} dict类型
 '''
 def read_json(path = 'bmsConfig·.json'):
-    with open(path, "r", encoding='utf-8') as fp:
-        data = json.load(fp)
+    if os.path.exists(path):
+        with open(path, "r", encoding='utf-8') as fp:
+            data = json.load(fp)
         return (data)
+    else:
+        messagebox.showerror('错误', '没有BMS配置文件, 下载配置文件请访问\nhttps://gitee.com/liuyu-git/bms-translator')
+        return 0
 
 '''
  description: pgn==0xec00, 多帧报文的开始 回应 结束的识别
@@ -733,8 +737,10 @@ def get_text_encoding(path:str):
 
 def main_prase(csv_df, id_place, data_place):
     global data_js
-    data_js = read_json('./config/bmsConfig.json')
 
+    data_js = read_json('./config/bmsConfig.json')
+    if data_js == 0:
+        return 0
     bms_check(data_js)
 
     csv_df = set_msg_name(csv_df, id_place, data_place)  # 获取名称列
