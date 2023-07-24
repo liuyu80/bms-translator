@@ -16,7 +16,7 @@ file_path = ''
 
 def creat_window():
     win_width = str(int(root.winfo_screenwidth() / 4))
-    win_height = str(int(root.winfo_screenheight() / 2))
+    win_height = str(int(root.winfo_screenheight() / 4))
     root.title('BMS翻译官 ' + version)
     root.geometry(f'{win_width}x{win_height}')
     return [win_width, win_height]
@@ -47,7 +47,7 @@ def creat_entry():
     var_split = StringVar()
     split_entry = Combobox(root, textvariable=var_split,
                            values=['tab(\\t)', '英文逗号(,)'])
-    split_entry.place(relx=0.65, y=50, width=120)
+    split_entry.place(relx=0.65, y=50, width=100)
 
     # 选择有效数据行
     valid_num_label = Label(root, text='有效数据开始行', font=('黑体', 11))
@@ -56,7 +56,7 @@ def creat_entry():
     even_numbers_3 = [x for x in range(1, 5)]
     valid_num_entry = Combobox(
         root, textvariable=var_valid, values=even_numbers_3)
-    valid_num_entry.place(relx=0.1, y=90+25, width=120)
+    valid_num_entry.place(relx=0.1, y=90+25, width=110)
 
     # 文件路径显示
 
@@ -108,17 +108,19 @@ def read_csv(path, split_s, valid_num):
 
     return data[valid_num-1:]
 
+
 def creat_csv(path, data_df, splite_s):
-    file_path, file_name = os.path.split(path)  #路径切割, 得到路径和文件名
+    file_path, file_name = os.path.split(path)  # 路径切割, 得到路径和文件名
     # 生成新的文件 保存解析后的数据
-    csv_name = ''.join(file_name.split('.')[:-1])  + '-译.' + file_name.split('.')[-1]
-    with open(os.path.join(file_path, csv_name), 'w', newline='', encoding= 'utf-8') as file:
+    csv_name = ''.join(file_name.split(
+        '.')[:-1]) + '-译.' + file_name.split('.')[-1]
+    with open(os.path.join(file_path, csv_name), 'w', newline='', encoding='utf-8') as file:
         # 使用制表符作为分隔符创建 CSV 的 writer 对象
         writer = csv.writer(file, delimiter=splite_s)
         # 写入数据行
         for row in data_df:
             writer.writerow(row)
-    os.startfile(os.path.join(file_path, csv_name)) # 自动使用系统默认应用打开该文件
+    os.startfile(os.path.join(file_path, csv_name))  # 自动使用系统默认应用打开该文件
 
 
 def parse_file():
@@ -149,24 +151,25 @@ def parse_file():
                 df_data = read_csv(file_path, ',', int(valid_s))
                 if len(df_data[3]) < 2:
                     showerror('错误', '请选择正确的文件')
-                df_data = main_prase(file_path, df_data, id, data_p)
+                df_data = main_prase(df_data, id, data_p)
                 creat_csv(file_path, df_data, ',')
-                
+
 
 def creat_btn():
     file_btn = Button(root, text='选择文件', command=open_file_manager)
-    file_btn.place(relx=0.3, y=200)
+    file_btn.place(relx=0.3, y=210)
 
     parse_btn = Button(root, text='开始解析', command=parse_file)
-    parse_btn.place(relx=0.5, y=200)
+    parse_btn.place(relx=0.5, y=210)
 
 
 if __name__ == "__main__":
     root = Tk()
+    root.resizable(False, False)
     root.iconbitmap('./config/bms.ico')
     win_width, win_height = creat_window()
     id_place, data_place, split_entry, valid_entry, file_path_entry = creat_entry()
-    id_place.set(3)
+    id_place.set(5)
     data_place.set(9)
 
     creat_btn()
