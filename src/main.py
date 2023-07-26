@@ -7,7 +7,7 @@
  Author       : liuyu 2543722345@qq.com
  Date         : 2023-02-09 09:17:00
  LastEditors  : liuyu 2543722345@qq.com
- LastEditTime : 2023-03-13 17:46:21
+ LastEditTime : 2023-07-26 16:39:45
  FilePath     : \\bms-translator\\src\\main.py
  Copyright (C) 2023 by liuyu. All rights reserved.
 '''
@@ -158,7 +158,6 @@ def param_msg_name(data:list):
     # 检测 帧ID 和 实际数据 是否为十六进制
     if hex_data_check([[data[1], '^0[xX][A-Fa-f0-9]{8}$|^[A-Fa-f0-9]{8}$'],
                     [str(data[3]).replace(' ',''), '^[A-Fa-f0-9]+$']]) is False:  
-        # print('hex_data_check is error', data[1], data[3])
         return 'error'
 
     id = int(data[1], 16)          # 帧ID
@@ -195,9 +194,8 @@ def bytes_translation(json_dic:dict, format_dic:dict, key:str, byte:int, index:i
     elif 'ratio' in json_dic.keys():
         try:
             values = Decimal(str(byte)) * Decimal(str(json_dic['ratio'])) + Decimal(str(json_dic['offset']))
-        except:
+        except Exception as e:
             return f"{key}: 解析错误"
-    
         if key:
             text += f"{key}: {values}{json_dic['unit_symbol']}; "
         else:
@@ -209,6 +207,10 @@ def bytes_translation(json_dic:dict, format_dic:dict, key:str, byte:int, index:i
                 text += f"{key}: {byte}; "
             else:
                 return byte
+        # 压缩BCD码
+        if json_dic['type'] == 'BCD':
+            return hex(int(byte))[2:]
+        # ascii码
         if json_dic['type'] == "ascii":
             range_list = json_dic["bytes/bit"]
             ascii_str = format_dic['data'][(range_list[0]-1)*2: (range_list[0]+range_list[1]-1)*2].replace(' ', '')
@@ -241,6 +243,8 @@ def bytes_translation(json_dic:dict, format_dic:dict, key:str, byte:int, index:i
                 s_data = s_str[range_list[0]*2: range_list[1]*2]
                 if len(s_data) > 2:
                     s_data = bit_overturn("xx"+ s_data, com['bytes/bit'][1]*2)
+                else:
+                    s_data = int(s_data, 16)
                 cell = bytes_translation(com, format_dic, None, s_data, index)
                 cell_list.append(cell)
             text += schema_to_str(json_dic['schema'], cell_list, key)
@@ -434,7 +438,6 @@ def one_frame_analysis(json_dic:dict, name:str, length:int, dataRaw:str):
 
     format_dic['format_str'], total_num = format_list_to_str(
         format_dic['format_list'], format_dic['total_bytes'], length, json_dic['data'])
-
     if length != total_num and format_dic['total_bytes'] != total_num:
         return f'解析失败-长度不一致{format_dic["format_str"]}'
     data_keys = list(json_dic['data'].keys())
@@ -598,11 +601,13 @@ def unsized_frame_analysis(json_dic:dict, name:str, data:str, format_str:str):
 '''
 def analysis_dataRaw(data:list):
     global data_js
+    # 分隔数据前一定要去除空格，不然影响解析
+    data[2] = data[2].replace(' ', '')
     if data[0] == '非标':
         return '非标未识别'
     elif data[0] == 'error':
         return '解析错误'
-
+    
     elif '-' in data[0]:
         name, index = data[0].split('-')
         try:
@@ -616,7 +621,7 @@ def analysis_dataRaw(data:list):
             return f"{data[0]}不定长报文未解析"
         try:
             s_re =  one_frame_analysis(data_js[data[0]], data[0], data[1], data[2])
-        except:
+        except Exception as e:
             s_re = '解析失败-001'
         return s_re
 '''
@@ -722,7 +727,6 @@ def write_csv(fileName:str, data:list, head:list):
     for line in data:
         csv_writer.writerow(line)
     f.close()
-    print('Save ', fileName, ' successfully!')
 
 '''
  description: 通过文件表头自动判断文件的编码，并返回

@@ -4,12 +4,12 @@ from tkinter.filedialog import *
 from tkinter.messagebox import *
 from main import *
 import json
-import os
+import os 
 import time
-import sys
 
 
-version = 'v0.2.3'
+
+version = 'v1.0.0'
 win_width = 0
 win_height = 0
 file_path = ''
@@ -67,35 +67,27 @@ def creat_entry():
         root, textvariable=var_valid, values=even_numbers_3)
     valid_num_entry.place(relx=0.1, y=90+25, width=110)
 
+    # 底部信息
+    git_url = Label(root, text='下载最新软件请访问 https://gitee.com/liuyu-git/bms-translator')
+    git_url.place(relx= 0.05, rely= 0.9)
+
     # 文件路径显示
-
-    def on_entry_click(event):
-        if file_path_entry.get() == "文件路径":
-            file_path_entry.delete(0, "end")
-            file_path_entry.config(fg="gray")
-
-    def on_focusout(event):
-        if file_path_entry.get() == "":
-            file_path_entry.insert(0, "文件路径")
-            file_path_entry.config(fg="gray")
-
     file_path_entry = Entry(root)
-    file_path_entry.place(relx=0.1, y=170, width=(int(win_width)/3) * 2)
+    file_path_entry.place(relx=0.1, y=160, width=(int(win_width)/3) * 2)
     file_path_entry.insert(0, "文件路径")
-    file_path_entry.bind("<FocusIn>", on_entry_click)
-    file_path_entry.bind("<FocusOut>", on_focusout)
     return [frame_id_place, frame_date_place, split_entry, valid_num_entry, file_path_entry]
 
 
 def ui_path_check(path):
-    if path == '':
+    path = file_path_entry.get()
+    if path == '文件路径' or path == '':
         showwarning('警告', '路径为空')
         return 0
     file_path, file_name = os.path.split(path)
     name, style = os.path.splitext(file_name)
-    if style not in ('.CSV', '.csv', '.xls', '.XLS'):
-        showwarning('警告', '文件名不正确')
-        return 0
+    # if style not in ('.CSV', '.csv', '.xls', '.XLS'):
+    #     showwarning('警告', '文件名不正确')
+    #     return 0
     if name[-2:] == '-译':
         showwarning('警告', '该文件已翻译, 请选择要翻译的报文文件')
         return 0
@@ -105,6 +97,7 @@ def ui_path_check(path):
 def open_file_manager():
     global file_path
     file_path = askopenfilename()
+    file_path_entry.delete(0, END)
     file_path_entry.insert(0, file_path)
 
 
@@ -131,6 +124,17 @@ def creat_csv(path, data_df, splite_s):
             writer.writerow(row)
     os.startfile(os.path.join(file_path, csv_name))  # 自动使用系统默认应用打开该文件
 
+def check_data(data):
+    try:
+        if len(data) < 2:
+            showerror('错误', '请选择正确的分隔符')
+        elif len(data[int(id_place.get())-1]) < 8:
+            showerror('错误', '请选择正确的帧ID列')   
+        elif len(data[int(data_place.get())-1]) < 2:
+            showerror('错误', '请选择正确的帧数据列')
+    except:
+        showerror('错误', '解析失败，请选择正确的列')
+
 
 def parse_file():
     save_config()
@@ -155,20 +159,28 @@ def parse_file():
                 split_s = '\t'
             elif split_s[0] == '英':
                 split_s = ','
-
-            df_data = read_csv(file_path, split_s, int(valid_s))
-            if len(df_data[3]) < 2:
-                showerror('错误', '请选择正确的文件')
+            try:
+                df_data = read_csv(file_path, split_s, int(valid_s))
+            except:
+                showwarning('警告', f'请先关闭 {os.path.split(file_path)[1]} 文件，我才能工作')
+                return
+            check_data(df_data[3])
             df_data = main_prase(df_data, id, data_p)
-            creat_csv(file_path, df_data, split_s)
+            try:
+                creat_csv(file_path, df_data, split_s)
+            except:
+                # 生成新的文件 保存解析后的数据
+                csv_name = ''.join(os.path.split(file_path)[1].split(
+                    '.')[:-1]) + '-译.' + os.path.split(file_path)[1].split('.')[-1]
+                showwarning('警告', f'请先关闭 {csv_name} 文件')
 
 
 def creat_btn():
     file_btn = Button(root, text='选择文件', command=open_file_manager)
-    file_btn.place(relx=0.3, y=210)
+    file_btn.place(relx=0.25, y=200)
 
     parse_btn = Button(root, text='开始解析', command=parse_file)
-    parse_btn.place(relx=0.5, y=210)
+    parse_btn.place(relx=0.55, y=200)
 
 
 def read_config(path):
@@ -189,7 +201,7 @@ def read_config(path):
         return config
 
 def set_config(config):
-    if int(time.time()) - config['timestamp'] < 500: 
+    if int(time.time()) - config['timestamp'] < 50000: 
         id_place.set(config['id_place'])
         data_place.set(config['data_place'])
         split_entry.set(config['split'])
@@ -197,11 +209,20 @@ def set_config(config):
     else:
         id_place.set(3)
         data_place.set(9)
+        split_entry.set('英文逗号(,)')
+        valid_entry.set(2)
 
+def not_config_path():
+    if os.path.exists('./config'):
+        return 1
+    else:
+        showerror('错误', '没有配置文件, 下载配置文件夹请访问\nhttps://gitee.com/liuyu-git/bms-translator')
+        root.destroy()
 
 if __name__ == "__main__":
     root = Tk()
     root.resizable(False, False)
+    not_config_path()
     if os.path.exists('./config/bms.ico'):
         root.iconbitmap('./config/bms.ico')
     win_width, win_height = creat_window()
