@@ -189,7 +189,7 @@ def bytes_translation(json_dic:dict, format_dic:dict, key:str, byte:int, index:i
             else:
                 return json_dic['options'][str(byte)]
         else:
-            return f"{key}: 解析错误-bytesOptions; "
+            return f"{key}: 无; "
     # 比率 偏移量 计算 翻译       
     elif 'ratio' in json_dic.keys():
         try:
