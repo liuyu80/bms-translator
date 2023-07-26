@@ -13,6 +13,7 @@ version = 'v1.0.0'
 win_width = 0
 win_height = 0
 file_path = ''
+unvalid_header = []
 
 
 def creat_window():
@@ -55,7 +56,7 @@ def creat_entry():
     split_label.place(relx=0.65, y=25)
     var_split = StringVar()
     split_entry = Combobox(root, textvariable=var_split,
-                           values=['tab(\\t)', '英文逗号(,)'])
+                           values=['tab(\\t)', '英文逗号(,)', '英文分号(;)', '竖线(|)'])
     split_entry.place(relx=0.65, y=50, width=100)
 
     # 选择有效数据行
@@ -107,6 +108,10 @@ def read_csv(path, split_s, valid_num):
         data = []
         for line in csv_reader:
             data.append(line)
+    global unvalid_header
+    for line in data[: valid_num-1]:
+        unvalid_header.append([line])
+    unvalid_header.append([''])
 
     return data[valid_num-1:]
 
@@ -157,18 +162,24 @@ def parse_file():
             print('正在解析')
             if split_s[0] == 't':
                 split_s = '\t'
-            elif split_s[0] == '英':
+            elif '英文逗号' in split_s:
                 split_s = ','
+            elif '分号' in split_s:
+                split_s = ';'
+            elif '竖线' in split_s:
+                split_s = '|'
             try:
                 df_data = read_csv(file_path, split_s, int(valid_s))
-            except:
+            except Exception as e:
+                print(e)
                 showwarning('警告', f'请先关闭 {os.path.split(file_path)[1]} 文件，我才能工作')
                 return
             check_data(df_data[3])
             df_data = main_prase(df_data, id, data_p)
             try:
                 creat_csv(file_path, df_data, split_s)
-            except:
+            except Exception as e:
+                print(e)
                 # 生成新的文件 保存解析后的数据
                 csv_name = ''.join(os.path.split(file_path)[1].split(
                     '.')[:-1]) + '-译.' + os.path.split(file_path)[1].split('.')[-1]
@@ -191,9 +202,9 @@ def read_config(path):
     else:
         config = {
             "timestamp": 1,
-            "id_place": 3,
+            "id_place": 5,
             "data_place": 9,
-            "split": "tab(\\t)",
+            "split": '英文逗号(,)',
             "valid_row": 2
         }
         with open(path, 'w', encoding='utf-8') as fp:
@@ -207,7 +218,7 @@ def set_config(config):
         split_entry.set(config['split'])
         valid_entry.set(config['valid_row'])
     else:
-        id_place.set(3)
+        id_place.set(5)
         data_place.set(9)
         split_entry.set('英文逗号(,)')
         valid_entry.set(2)
@@ -225,10 +236,11 @@ if __name__ == "__main__":
     not_config_path()
     if os.path.exists('./config/bms.ico'):
         root.iconbitmap('./config/bms.ico')
+
+    config = read_config('./config/config')
     win_width, win_height = creat_window()
     id_place, data_place, split_entry, valid_entry, file_path_entry = creat_entry()
 
-    config = read_config('./config/config')
     set_config(config)
     creat_btn()
     root.mainloop()
