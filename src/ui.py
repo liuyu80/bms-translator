@@ -17,7 +17,7 @@ unvalid_header = []
 
 
 def creat_window():
-    win_width = 512 #int(root.winfo_screenwidth() / 3)
+    win_width = 500 #int(root.winfo_screenwidth() / 3)
     win_height = 256 #int(root.winfo_screenheight() / 3)
     root.title('BMS翻译官 ' + version)
     root.geometry(f'{win_width}x{win_height}+{int(root.winfo_screenwidth()/3)}+{int(root.winfo_screenheight()/3)}')
