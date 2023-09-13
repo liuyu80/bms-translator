@@ -7,7 +7,7 @@
  Author       : liuyu 2543722345@qq.com
  Date         : 2023-02-09 09:17:00
  LastEditors  : liuyu 2543722345@qq.com
- LastEditTime : 2023-07-26 16:39:45
+ LastEditTime : 2023-09-13 23:00:03
  FilePath     : \\bms-translator\\src\\main.py
  Copyright (C) 2023 by liuyu. All rights reserved.
 '''
@@ -442,11 +442,17 @@ def one_frame_analysis(json_dic:dict, name:str, length:int, dataRaw:str):
         return f'解析失败-长度不一致{format_dic["format_str"]}'
     data_keys = list(json_dic['data'].keys())
     format_dic['data'] = format_dic['data'].replace(' ','')[:total_num*2]
-    data = int(format_dic['data'], 16).to_bytes(total_num, byteorder="big", signed=False)
+    # data = int(format_dic['data'], 16).to_bytes(total_num, byteorder="big", signed=True)
+    if len(format_dic['data']) < total_num*2:
+        format_dic['data'] += (total_num*2-len(format_dic['data'])) * '0'
+    if len(format_dic['data']) > total_num*2:
+        format_dic['data'] = format_dic['data'][:total_num*2]
+    data = bytes.fromhex(format_dic['data'])
     pack = list(struct.unpack(format_dic['format_str'], data))
-    
+    format_dic['format_str'] = format_dic['format_str'][1:]
+
     format_dic['tran_text'] += translation_fun(json_dic, format_dic, data_keys, pack)
-    # return (pack ,format_dic['format_list'] ,format_dic['format_str'], format_dic['tran_text']) #调试用
+
     return format_dic['tran_text']
 
 
@@ -522,7 +528,7 @@ def more_frame_analysis(json_dic:dict, name:str, index:str, dataRaw:str):
 '''
 def format_list_to_str(format_list:list, total_bytes:int, length:int, json_dic:dict):
     total_num = 0
-    format_str = ''
+    format_str = '!'
     min_len = min([length, total_bytes]) # 取最小长度
     for num ,cell in enumerate(format_list):
         if min_len == total_num:
@@ -619,10 +625,7 @@ def analysis_dataRaw(data:list):
     if data[0] in data_js.keys():
         if 'max_count' in data_js[data[0]].keys():
             return f"{data[0]}不定长报文未解析"
-        try:
-            s_re =  one_frame_analysis(data_js[data[0]], data[0], data[1], data[2])
-        except Exception as e:
-            s_re = '解析失败-001'
+        s_re =  one_frame_analysis(data_js[data[0]], data[0], data[1], data[2])
         return s_re
 '''
  description: 给名称一列赋值
@@ -634,7 +637,8 @@ def set_msg_name(df, id_place, data_place):
     id_place = int(id_place)
     for line in df:
         # 名称, 帧ID, 数据长度, 数据(HEX)
-        line.insert(id_place-1, param_msg_name(['', line[id_place-1], int(len(line[data_place-1].replace(' ', ''))), line[data_place-1]]))
+        name = param_msg_name(['', line[id_place-1], int(len(line[data_place-1].replace(' ', ''))), line[data_place-1]])
+        line.insert(id_place-1, name)
     return df
 
 '''
@@ -678,7 +682,12 @@ def set_meaning(df, id_place, data_place):
  return {*} 解析好的字典
 '''
 def options_to_dic(s_options:str, is_intNum:int):
-    options = s_options.replace(' ','').split(';')
+    try:
+        options = s_options.replace(' ','').split(';')
+    except Exception as e:
+        print(e)
+        print(s_options)
+        exit()
     options_dic = {}
     # 如果占用大小是字节
     if isinstance(is_intNum, int):
@@ -699,17 +708,18 @@ def options_to_dic(s_options:str, is_intNum:int):
 '''
  description: 读取csv文件
  param {str} path: 文件路径
- return {list} 文件数据 
+ return {list} 文件数据 get_text_encoding(path)
 '''
 def get_CSV_data(path:str):
     global csv_header
-    with open(path, "r", encoding=get_text_encoding(path)) as file:
+    maxlen = 0
+    with open(path, "r", encoding='utf-8') as file:
         csv_reader = csv.reader(file)
         data = []
         for line in csv_reader:
+            if len(line) > maxlen:
+                maxlen = len(line)
             data.append(line)
-        csv_header = data[0]
-        del data[0]
     return data
 
 '''
@@ -735,14 +745,14 @@ def write_csv(fileName:str, data:list, head:list):
 '''
 def get_text_encoding(path:str):
     with open(path, 'rb') as f:
-        text = f.readline()
+        text = f.read()
         resp = chardet.detect(text)
     return resp['encoding']
 
-def main_prase(csv_df, id_place, data_place):
+def main_prase(csv_df, id_place, data_place, bmsConfig):
     global data_js
 
-    data_js = read_json('./config/bmsConfig.json')
+    data_js = bmsConfig
     if data_js == 0:
         return 0
     bms_check(data_js)

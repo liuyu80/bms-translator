@@ -9,7 +9,7 @@ import time
 
 
 
-version = 'v1.0.1'
+version = 'v1.1.0'
 win_width = 0
 win_height = 0
 file_path = ''
@@ -29,6 +29,7 @@ def save_config():
     config['data_place'] = data_place.get()
     config['split'] = split_entry.get()
     config['valid_row'] = valid_entry.get()
+    config['protocols_type'] = protocols_entry.get()
     with open('./config/config', 'w', encoding='utf-8') as fp:
         json.dump(config, fp)
 
@@ -36,8 +37,8 @@ def creat_entry():
     # 帧ID位置 的选项
     id_label = Label(root, text='帧ID所在的列', font=('黑体', 11))
     id_label.place(relx=0.09, y=25)
-    var_id = IntVar()
-    even_numbers_1 = [x for x in range(1, 10)]
+    var_id = StringVar()
+    even_numbers_1 = [f"{i+1} | {chr(65+i)}" for i in range(9)]
     frame_id_place = Combobox(root, textvariable=var_id, values=even_numbers_1)
     frame_id_place.place(relx=0.1, y=50, width=100)
     frame_id_place.set('1')
@@ -45,8 +46,8 @@ def creat_entry():
     # 帧数据位置的选项
     data_label = Label(root, text='帧数据所在的列', font=('黑体', 11))
     data_label.place(relx=0.35, y=25)
-    var_data = IntVar()
-    even_numbers_2 = [x for x in range(1, 10)]
+    var_data = StringVar()
+    even_numbers_2 = [f"{i+1} | {chr(65+i)}" for i in range(9)]
     frame_date_place = Combobox(
         root, textvariable=var_data, values=even_numbers_2)
     frame_date_place.place(relx=0.35, y=50, width=120)
@@ -68,6 +69,16 @@ def creat_entry():
         root, textvariable=var_valid, values=even_numbers_3)
     valid_num_entry.place(relx=0.1, y=90+25, width=110)
 
+    # 选择解析协议
+    global bms_config
+    protocols_label = Label(root, text='选择BMS协议', font=('黑体', 11))
+    protocols_label.place(relx=0.65, y=90)
+    protocols_var_valid = StringVar()
+    even_numbers_4 = list(bms_config.keys())
+    protocols_num_entry = Combobox(
+        root, textvariable=protocols_var_valid, values=even_numbers_4)
+    protocols_num_entry.place(relx=0.65, y=90+25, width=110)
+
     # 底部信息
     git_url = Label(root, text='下载最新软件请访问 https://gitee.com/liuyu-git/bms-translator')
     git_url.place(relx= 0.05, rely= 0.9)
@@ -76,7 +87,7 @@ def creat_entry():
     file_path_entry = Entry(root)
     file_path_entry.place(relx=0.1, y=160, width=(int(win_width)/3) * 2)
     file_path_entry.insert(0, "文件路径")
-    return [frame_id_place, frame_date_place, split_entry, valid_num_entry, file_path_entry]
+    return [frame_id_place, frame_date_place, split_entry, valid_num_entry, file_path_entry, protocols_num_entry]
 
 
 def ui_path_check(path):
@@ -101,7 +112,7 @@ def open_file_manager():
     file_path_entry.delete(0, END)
     file_path_entry.insert(0, file_path)
 
-
+# 
 def read_csv(path, split_s, valid_num):
     with open(path, "r", encoding=get_text_encoding(path)) as file:
         csv_reader = csv.reader(file, delimiter=split_s)
@@ -133,24 +144,36 @@ def check_data(data):
     try:
         if len(data) < 2:
             showerror('错误', '请选择正确的分隔符')
-        elif len(data[int(id_place.get())-1]) < 8:
+        elif len(data[int(letter_to_number(id_place.get()))-1]) < 8:
             showerror('错误', '请选择正确的帧ID列')   
-        elif len(data[int(data_place.get())-1]) < 2:
+        elif len(data[int(letter_to_number(data_place.get()))-1]) < 2:
             showerror('错误', '请选择正确的帧数据列')
-    except:
+    except Exception as e:
+        print(e)
         showerror('错误', '解析失败，请选择正确的列')
 
 
 def parse_file():
     save_config()
-    id = id_place.get()
-    data_p = data_place.get()
-    split_s = split_entry.get()
-    valid_s = valid_entry.get()
+    id       = letter_to_number(id_place.get())
+    data_p   = letter_to_number(data_place.get())
+    split_s  = split_entry.get()
+    valid_s  = valid_entry.get()
+    bms_type = bms_config[protocols_entry.get()]
+    print(
+        [id       ,
+        data_p   ,
+        split_s  ,
+        valid_s]
+    )
     if id == '':
-        showwarning('警告', '请给出帧ID的位置')
+        showwarning('警告', '请给出帧ID的')
+    elif id == -1:
+        showwarning('警告', '请给出正确的帧ID位置')
     elif data_p == '':
         showwarning('警告', '请给出帧数据的位置')
+    elif data_p == -1:
+        showwarning('警告', '请给出正确的帧数据位置')
     elif id == data_p:
         showerror('错误', '帧ID和帧数据列数相同')
     elif split_s == '':
@@ -175,7 +198,7 @@ def parse_file():
                 showwarning('警告', f'请先关闭 {os.path.split(file_path)[1]} 文件，我才能工作')
                 return
             check_data(df_data[3])
-            df_data = main_prase(df_data, id, data_p)
+            df_data = main_prase(df_data, id, data_p, bms_type)
             try:
                 creat_csv(file_path, df_data, split_s)
             except Exception as e:
@@ -192,6 +215,8 @@ def creat_btn():
 
     parse_btn = Button(root, text='开始解析', command=parse_file)
     parse_btn.place(relx=0.55, y=200)
+
+
 
 
 def read_config(path):
@@ -213,15 +238,31 @@ def read_config(path):
 
 def set_config(config):
     if int(time.time()) - config['timestamp'] < 50000: 
+        print(config)
         id_place.set(config['id_place'])
         data_place.set(config['data_place'])
         split_entry.set(config['split'])
         valid_entry.set(config['valid_row'])
+        protocols_entry.set(config['protocols_type'])
     else:
-        id_place.set(5)
-        data_place.set(9)
+        id_place.set('5 | E')
+        data_place.set("9 | I")
         split_entry.set('英文逗号(,)')
         valid_entry.set(2)
+        protocols_entry.set("GB2015")
+
+def letter_to_number(line):
+    letter = line[0]
+    if letter in [str(x) for x in range(1, 24)]:
+        return int(letter)
+    if letter.isalpha():
+        ascii_value = ord(letter.lower())
+        if 97 <= ascii_value <= 122:  # 小写字母 a-z
+            return ascii_value - 96
+        elif 65 <= ascii_value <= 90:  # 大写字母 A-Z
+            return ascii_value - 64
+    return -1  # 如果输入不是字母和非0，返回 -1 或其他适当的值
+
 
 def not_config_path():
     if os.path.exists('./config'):
@@ -231,17 +272,20 @@ def not_config_path():
         root.destroy()
 
 if __name__ == "__main__":
+    bms_config = {}
     root = Tk()
     root.resizable(False, False)
     not_config_path()
     if os.path.exists('./config/bms.ico'):
         root.iconbitmap('./config/bms.ico')
-
+    bms_config = read_json('./config/bmsConfig.json')
     config = read_config('./config/config')
     win_width, win_height = creat_window()
-    id_place, data_place, split_entry, valid_entry, file_path_entry = creat_entry()
+    id_place, data_place, split_entry, valid_entry, file_path_entry, protocols_entry = creat_entry()
 
     set_config(config)
     creat_btn()
+    
+    bms_config = read_json('./config/bmsConfig.json')
     root.mainloop()
  
