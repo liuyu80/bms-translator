@@ -23,12 +23,13 @@ jobs:
         run: |
           .\update_version.ps1
           python -m PyInstaller ui.spec
-      - run: ls dist
-      - run: mkdir -p bms-translator/
-      - run: cp -r config/  bms-translator/config/
-      - run: cp dist/ui.exe bms-translator/bms-translator.exe
-      - run: ls bms-translator
-      - run: Compress-Archive -Path "bms-translator" -DestinationPath "bms-translator.zip"
+      - name: Prepare release directory
+        run: |
+          mkdir -p bms-translator
+          cp -r config/ bms-translator/config/
+          cp dist/ui.exe bms-translator/bms-translator.exe
+      - name: Create archive zip
+        run: Compress-Archive -Path "bms-translator" -DestinationPath "bms-translator.zip"
       - name: Build Changelog
         id: github_release
         uses: mikepenz/release-changelog-builder-action@v5
