@@ -9,7 +9,7 @@ import time
 
 
 
-version = 'v1.1.0'
+version = '<version>'
 win_width = 0
 win_height = 0
 file_path = ''

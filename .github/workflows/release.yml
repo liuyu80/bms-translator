@@ -21,6 +21,7 @@ jobs:
           pip install pyinstaller
       - name: Run pyinstaller
         run: |
+          .\update_version.ps1
           python -m PyInstaller ui.spec
       - run: ls dist
       - run: mkdir -p bms-translator/
