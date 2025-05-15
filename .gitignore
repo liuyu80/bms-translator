@@ -1,6 +1,5 @@
 *.csv
 *译.*
-*.txt
 *.xlsx
 __pycache__/
 output/
