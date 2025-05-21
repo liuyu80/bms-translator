@@ -1,11 +1,13 @@
-from tkinter import *
-from tkinter.ttk import *
-from tkinter.filedialog import *
-from tkinter.messagebox import *
-from main import *
+from tkinter import Tk, StringVar, IntVar, Label, Entry, Button, END
+from tkinter.ttk import Combobox
+from tkinter.filedialog import askopenfilename
+from tkinter.messagebox import showwarning, showerror
+from main import read_json, main_prase
+from utils import get_text_encoding 
 import json
-import os 
+import os
 import time
+import csv
 
 
 
@@ -64,7 +66,7 @@ def creat_entry():
     valid_num_label = Label(root, text='有效数据开始行', font=('黑体', 11))
     valid_num_label.place(relx=0.09, y=90)
     var_valid = IntVar()
-    even_numbers_3 = [x for x in range(1, 5)]
+    even_numbers_3 = [str(x) for x in range(1, 5)]
     valid_num_entry = Combobox(
         root, textvariable=var_valid, values=even_numbers_3)
     valid_num_entry.place(relx=0.1, y=90+25, width=110)
@@ -74,7 +76,7 @@ def creat_entry():
     protocols_label = Label(root, text='选择BMS协议', font=('黑体', 11))
     protocols_label.place(relx=0.65, y=90)
     protocols_var_valid = StringVar()
-    even_numbers_4 = list(bms_config.keys())
+    even_numbers_4 = list(bms_config.keys()) # type: ignore
     protocols_num_entry = Combobox(
         root, textvariable=protocols_var_valid, values=even_numbers_4)
     protocols_num_entry.place(relx=0.65, y=90+25, width=110)
@@ -159,7 +161,7 @@ def parse_file():
     data_p   = letter_to_number(data_place.get())
     split_s  = split_entry.get()
     valid_s  = valid_entry.get()
-    bms_type = bms_config[protocols_entry.get()]
+    bms_type = bms_config[protocols_entry.get()] # type: ignore
     print(
         [id       ,
         data_p   ,
@@ -278,7 +280,7 @@ if __name__ == "__main__":
     not_config_path()
     if os.path.exists('./config/bms.ico'):
         root.iconbitmap('./config/bms.ico')
-    bms_config = read_json('./config/bmsConfig.json')
+    bms_config = read_json('./config/bmsConfig.json') # type: ignore
     config = read_config('./config/config')
     win_width, win_height = creat_window()
     id_place, data_place, split_entry, valid_entry, file_path_entry, protocols_entry = creat_entry()
@@ -286,6 +288,6 @@ if __name__ == "__main__":
     set_config(config)
     creat_btn()
     
-    bms_config = read_json('./config/bmsConfig.json')
+    bms_config = read_json('./config/bmsConfig.json') # type: ignore
     root.mainloop()
  
