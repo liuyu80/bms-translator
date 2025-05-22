@@ -62,6 +62,7 @@ try {
     Write-Host "文件压缩成功: $bmsPathName.zip" -ForegroundColor Green
 
     Write-Host "安装程序构建完成！" -ForegroundColor Green
+    Write-Host "::set-output name=installer_zip_path::$bmsPathName.zip"
 }
 catch {
     Write-Error "构建安装程序时发生错误: $($_.Exception.Message)"

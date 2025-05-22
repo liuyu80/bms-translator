@@ -20,6 +20,7 @@ jobs:
           pip install -r requirements.txt
           pip install pyinstaller
       - name: Update version and run pyinstaller
+        id: build_installer
         run: |
           .\.github\update_version.ps1
           .\.github\build_installer.ps1
@@ -34,4 +35,4 @@ jobs:
           token: ${{ secrets.RELEASE_TOKEN }}
           body: ${{steps.github_release.outputs.changelog}}
           files: |
-            ./bms-translator.zip
+            ${{steps.build_installer.outputs.installer_zip_path}}
