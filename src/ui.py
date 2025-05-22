@@ -1,3 +1,5 @@
+from tkinter import Text
+import webbrowser
 from tkinter import Tk, StringVar, IntVar, Label, Entry, Button, END
 from tkinter.ttk import Combobox
 from tkinter.filedialog import askopenfilename
@@ -43,7 +45,7 @@ def creat_entry():
     var_id = StringVar()
     even_numbers_1 = [f"{i+1} | {chr(65+i)}" for i in range(9)]
     frame_id_place = Combobox(root, textvariable=var_id, values=even_numbers_1)
-    frame_id_place.place(relx=0.1, y=50, width=100)
+    frame_id_place.place(relx=0.1, y=50, width=110)
     frame_id_place.set('1')
 
     # 帧数据位置的选项
@@ -57,11 +59,11 @@ def creat_entry():
 
     # 数据分隔符
     split_label = Label(root, text='数据分隔符', font=('黑体', 11))
-    split_label.place(relx=0.65, y=25)
+    split_label.place(relx=0.62, y=25)
     var_split = StringVar()
     split_entry = Combobox(root, textvariable=var_split,
                            values=['tab(\\t)', '英文逗号(,)', '英文分号(;)', '竖线(|)'])
-    split_entry.place(relx=0.65, y=50, width=100)
+    split_entry.place(relx=0.62, y=50, width=110)
 
     # 选择有效数据行
     valid_num_label = Label(root, text='有效数据开始行', font=('黑体', 11))
@@ -75,21 +77,27 @@ def creat_entry():
     # 选择解析协议
     global bms_config
     protocols_label = Label(root, text='选择BMS协议', font=('黑体', 11))
-    protocols_label.place(relx=0.65, y=90)
+    protocols_label.place(relx=0.62, y=90)
     protocols_var_valid = StringVar()
     even_numbers_4 = list(bms_config.keys()) # type: ignore
     protocols_num_entry = Combobox(
         root, textvariable=protocols_var_valid, values=even_numbers_4)
-    protocols_num_entry.place(relx=0.65, y=90+25, width=110)
+    protocols_num_entry.place(relx=0.62, y=90+25, width=110)
 
     # 底部信息
-    git_url = Label(root, text='下载最新软件请访问 https://gitee.com/liuyu-git/bms-translator')
-    git_url.place(relx= 0.05, rely= 0.9)
+    def open_url(event):
+        webbrowser.open_new("https://github.com/liuyu80/bms-translator/releases/latest")
+
+    git_url = Text(root, height=1, width=60, wrap="none", bg=root.cget('bg'), fg='blue', cursor="hand2", borderwidth=0, highlightthickness=0)
+    git_url.insert(1.0, '下载最新软件')
+    git_url.config(state='disabled')
+    git_url.bind("<Button-1>", open_url)
+    git_url.place(relx=0.75, rely=0.9)
 
     # 文件路径显示
     file_path_entry = Entry(root)
-    file_path_entry.place(relx=0.1, y=160, width=(int(win_width)/3) * 2)
-    file_path_entry.insert(0, "文件路径")
+    file_path_entry.place(relx=0.1, y=160, width=(int(win_width)/3) * 2 + 35)
+    file_path_entry.insert(0, " 选择文件路径")
     return [frame_id_place, frame_date_place, split_entry, valid_num_entry, file_path_entry, protocols_num_entry]
 
 
@@ -274,7 +282,7 @@ def not_config_path():
     if os.path.exists('./config'):
         return 1
     else:
-        showerror('错误', '没有配置文件, 下载配置文件夹请访问\nhttps://gitee.com/liuyu-git/bms-translator')
+        showerror('错误', '没有配置文件夹，请检查')
         root.destroy()
 
 if __name__ == "__main__":
