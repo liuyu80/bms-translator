@@ -13,23 +13,26 @@ jobs:
       - name: Install Python
         uses: actions/setup-python@v1
         with:
-          python-version: '3.8'
+          python-version: '3.13'
           architecture: 'x64'
       - name: Install requirements and installer
         run: |
           pip install -r requirements.txt
           pip install pyinstaller
-      - name: Run pyinstaller
+      - name: Update version and run pyinstaller
         run: |
-          .\update_version.ps1
+          .\.github\update_version.ps1
           python -m PyInstaller ui.spec
       - name: Prepare release directory
         run: |
-          mkdir -p bms-translator
-          cp -r config/ bms-translator/config/
-          cp dist/ui.exe bms-translator/bms-translator.exe
+          $latestTag = git describe --tags --abbrev=0
+          $bmsPathName = "bms-translator-" + $latestTag
+          Write-Output $latestTag  $bmsPathName
+          mkdir -p $bmsPathName
+          cp -r config/ $bmsPathName/config/
+          cp dist/ui.exe $bmsPathName/$bmsPathName.exe
       - name: Create archive zip
-        run: Compress-Archive -Path "bms-translator" -DestinationPath "bms-translator.zip"
+        run: Compress-Archive -Path "$bmsPathName" -DestinationPath "$bmsPathName.zip"
       - name: Build Changelog
         id: github_release
         uses: mikepenz/release-changelog-builder-action@v5
