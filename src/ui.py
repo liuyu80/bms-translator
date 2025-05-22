@@ -3,11 +3,12 @@ from tkinter.ttk import Combobox
 from tkinter.filedialog import askopenfilename
 from tkinter.messagebox import showwarning, showerror
 from main import read_json, main_prase
-from utils import get_text_encoding 
+from utils import get_text_encoding
 import json
 import os
 import time
 import csv
+import copy
 
 
 
@@ -102,9 +103,9 @@ def ui_path_check(path):
     # if style not in ('.CSV', '.csv', '.xls', '.XLS'):
     #     showwarning('警告', '文件名不正确')
     #     return 0
-    if name[-2:] == '-译':
-        showwarning('警告', '该文件已翻译, 请选择要翻译的报文文件')
-        return 0
+    # if name[-2:] == '-译':
+    #     showwarning('警告', '该文件已翻译, 请选择要翻译的报文文件')
+    #     return 0
     return 1
 
 
@@ -156,12 +157,13 @@ def check_data(data):
 
 
 def parse_file():
+    parse_btn.config(state='disabled')
     save_config()
-    id       = letter_to_number(id_place.get())
-    data_p   = letter_to_number(data_place.get())
-    split_s  = split_entry.get()
-    valid_s  = valid_entry.get()
-    bms_type = bms_config[protocols_entry.get()] # type: ignore
+    id       : int  = letter_to_number(id_place.get())
+    data_p   : int  = letter_to_number(data_place.get())
+    split_s  : str  = split_entry.get()
+    valid_s  : int  = valid_entry.get()
+    bms_type : dict = copy.deepcopy(bms_config_backup[protocols_entry.get()]) # type: ignore
     print(
         [id       ,
         data_p   ,
@@ -209,12 +211,14 @@ def parse_file():
                 csv_name = ''.join(os.path.split(file_path)[1].split(
                     '.')[:-1]) + '-译.' + os.path.split(file_path)[1].split('.')[-1]
                 showwarning('警告', f'请先关闭 {csv_name} 文件')
+    parse_btn.config(state='normal')
 
 
 def creat_btn():
     file_btn = Button(root, text='选择文件', command=open_file_manager)
     file_btn.place(relx=0.25, y=200)
 
+    global parse_btn
     parse_btn = Button(root, text='开始解析', command=parse_file)
     parse_btn.place(relx=0.55, y=200)
 
@@ -281,6 +285,7 @@ if __name__ == "__main__":
     if os.path.exists('./config/bms.ico'):
         root.iconbitmap('./config/bms.ico')
     bms_config = read_json('./config/bmsConfig.json') # type: ignore
+    bms_config_backup = bms_config.copy()
     config = read_config('./config/config')
     win_width, win_height = creat_window()
     id_place, data_place, split_entry, valid_entry, file_path_entry, protocols_entry = creat_entry()
