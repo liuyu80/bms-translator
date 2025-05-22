@@ -699,12 +699,8 @@ def set_meaning(df, id_place, data_place):
  return {*} 解析好的字典
 '''
 def options_to_dic(s_options:str, is_intNum:int):
-    try:
-        options = s_options.replace(' ','').split(';')
-    except Exception as e:
-        print(e)
-        print(s_options)
-        exit()
+
+    options = s_options.replace(' ','').split(';')
     options_dic = {}
     # 如果占用大小是字节
     if isinstance(is_intNum, int):
@@ -761,46 +757,14 @@ def write_csv(fileName:str, data:list, head:list):
  return {str} 文件编码
 '''
 
-def main_prase(csv_df, id_place, data_place, bmsConfig):
+def main_prase(csv_df:list, id_place:int, data_place:int, bmsConfig:dict):
     global data_js
 
     data_js = bmsConfig
-    if data_js == 0:
-        return 0
     bms_check(data_js) # type: ignore
 
     csv_df = set_msg_name(csv_df, id_place, data_place)  # 获取名称列
     csv_df = set_meaning(csv_df, id_place, data_place)   # 获取翻译列
 
     return csv_df
-
-
-
-if __name__ == "__main__":
-    root = tk.Tk()  # 窗体对象
-    root.withdraw()  # 窗体隐藏
-    root.iconbitmap('./config/bms.ico')
-    path = tk.filedialog.askopenfilename() # type: ignore
-    # 文件路径自检
-    path_check(path)
-    file_path, file_name = os.path.split(path)  #路径切割, 得到路径和文件名
-
-    data_js = read_json('./config/bmsConfig.json')
-    csv_df = get_CSV_data(path)
-    # BMS 配置文件自检
-    bms_check(data_js) # type: ignore
-
-    # csv_df = set_msg_name(csv_df)  # 获取名称列 # Commented out for now, as it requires id_place and data_place
-    # csv_df = set_meaning(csv_df)   # 获取翻译列 # Commented out for now, as it requires id_place and data_place
-
-    # 生成新的文件 保存解析后的数据
-    csv_name = ''.join(file_name.split('.')[:-1])  + '-译.' + file_name.split('.')[-1]
-    write_csv(
-        os.path.join(file_path, csv_name), 
-        csv_df, 
-        ['序号','传输方向','时间标识','名称','帧ID','帧格式','帧类型','数据长度','数据(HEX)', 'BMS报文翻译']
-        )
-    os.startfile(os.path.join(file_path, csv_name)) # 自动使用系统默认应用打开该文件
-    sys.exit()
-
     
