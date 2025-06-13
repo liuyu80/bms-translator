@@ -42,12 +42,23 @@ try {
     if ($LASTEXITCODE -ne 0) {
         throw "复制 config/ 目录失败。"
     }
+    # 确保 config/ 目录及其内容可读写
+    Get-ChildItem -Path "$bmsPathName/config" -Recurse | ForEach-Object {
+        if (($_.Attributes -band [System.IO.FileAttributes]::ReadOnly) -eq [System.IO.FileAttributes]::ReadOnly) {
+            $_.IsReadOnly = $false
+        }
+    }
     Write-Host "config/ 目录复制成功。" -ForegroundColor Green
 
     Write-Host "正在复制 dist/ui.exe..."
     cp dist/ui.exe $bmsPathName/$bmsPathName.exe
     if ($LASTEXITCODE -ne 0) {
         throw "复制 dist/ui.exe 失败。"
+    }
+    # 确保 ui.exe 可读写
+    $exePath = Join-Path $bmsPathName "$bmsPathName.exe"
+    if ((Get-Item $exePath).Attributes -band [System.IO.FileAttributes]::ReadOnly) {
+        (Get-Item $exePath).IsReadOnly = $false
     }
     Write-Host "dist/ui.exe 复制成功。" -ForegroundColor Green
 
