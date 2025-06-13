@@ -7,6 +7,7 @@ from tkinter.messagebox import showwarning, showerror
 from main import read_json, main_prase
 from utils import get_text_encoding
 import json
+import re
 import os
 import time
 import csv
@@ -163,30 +164,44 @@ def check_data(data):
         print(e)
         showerror('错误', '解析失败，请选择正确的列')
 
+def parse_asc_file(asc_file) -> list:
+    regex_pattern = r"^(\d+\.\d+).*?(\w+f456|\w+56f4).*?d\s(\d+)\s(.*?)$"
+    output_csv_path = 'matched_data.csv'
+    matched_data_list = []
+
+    with open(asc_file, 'r', encoding='utf-8') as infile:
+        for line_num, line in enumerate(infile, 1):
+            line = line.strip() # 移除行末的空白符，包括换行符
+            match = re.match(regex_pattern, line)
+            if match:
+                extracted_groups = list(match.groups())
+                extracted_groups[1] = '0x' + extracted_groups[1]
+                matched_data_list.append(extracted_groups)
+    return matched_data_list
 
 def parse_file():
     parse_btn.config(state='disabled')
     save_config()
-    id       : int  = letter_to_number(id_place.get())
+    id_index  : int  = letter_to_number(id_place.get())
     data_p   : int  = letter_to_number(data_place.get())
     split_s  : str  = split_entry.get()
     valid_s  : int  = valid_entry.get()
     bms_type : dict = copy.deepcopy(bms_config_backup[protocols_entry.get()]) # type: ignore
     print(
-        [id       ,
+        [id_index       ,
         data_p   ,
         split_s  ,
         valid_s]
     )
-    if id == '':
+    if id_index == '':
         showwarning('警告', '请给出帧ID的')
-    elif id == -1:
+    elif id_index == -1:
         showwarning('警告', '请给出正确的帧ID位置')
     elif data_p == '':
         showwarning('警告', '请给出帧数据的位置')
     elif data_p == -1:
         showwarning('警告', '请给出正确的帧数据位置')
-    elif id == data_p:
+    elif id_index == data_p:
         showerror('错误', '帧ID和帧数据列数相同')
     elif split_s == '':
         showwarning('警告', "请选择数据分隔符")
@@ -204,13 +219,19 @@ def parse_file():
             elif '竖线' in split_s:
                 split_s = '|'
             try:
-                df_data = read_csv(file_path, split_s, int(valid_s))
+                file_extension = os.path.splitext(file_path)[1].lower()
+                if file_extension == '.asc':
+                    df_data = parse_asc_file(file_path)
+                    id_index = 2
+                    data_p = 4
+                else:
+                    df_data = read_csv(file_path, split_s, int(valid_s))
             except Exception as e:
                 print(e)
                 showwarning('警告', f'请先关闭 {os.path.split(file_path)[1]} 文件，我才能工作')
                 return
-            check_data(df_data[3])
-            df_data = main_prase(df_data, id, data_p, bms_type)
+            # check_data(df_data[3])
+            df_data = main_prase(df_data, id_index, data_p, bms_type)
             try:
                 creat_csv(file_path, df_data, split_s)
             except Exception as e:
