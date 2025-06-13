@@ -152,16 +152,16 @@ def creat_csv(path, data_df, splite_s):
             writer.writerow(row)
     os.startfile(os.path.join(file_path, csv_name))  # 自动使用系统默认应用打开该文件
 
-def check_data(data) -> bool:
+def check_data(data: list, idx: int , datax: int) -> bool:
     if len(data) < 2:
         showerror('错误', '请选择正确的分隔符')
         return False
-    id_idx = int(letter_to_number(id_place.get())) - 1
+    id_idx = idx - 1
     if id_idx >= len(data) or len(data[id_idx]) < 8:
         showerror('错误', '请选择正确的帧ID列')
         return False
     
-    data_idx = int(letter_to_number(data_place.get())) - 1
+    data_idx = datax - 1
     if data_idx >= len(data) or len(data[data_idx]) < 2:
         showerror('错误', '请选择正确的帧数据列')
         return False
@@ -235,7 +235,7 @@ def parse_file():
                 print(e)
                 showwarning('警告', f'请先关闭 {os.path.split(file_path)[1]} 文件，我才能工作')
                 return
-            if check_data(df_data[3]):
+            if check_data(df_data[3], id_index, data_p):
                 df_data = main_prase(df_data, id_index, data_p, bms_type)
                 try:
                     creat_csv(file_path, df_data, split_s)
