@@ -14,7 +14,7 @@
                         1,
                         3
                     ],
-                    "options": "101: V1.1"
+                    "options": "534331: SC1; 101: V1.1"
                 }
             }
         },
@@ -81,7 +81,7 @@
                         1,
                         3
                     ],
-                    "options": "101: V1.1"
+                    "options": "534331: SC1; 101: V1.1"
                 },
                 "电池类型": {
                     "bytes/bit": [
@@ -1910,6 +1910,2750 @@
                     ],
                     "ratio": 0.1,
                     "offset": -3000,
+                    "unit_symbol": "A"
+                },
+                "累计充电时间": {
+                    "bytes/bit": [
+                        5,
+                        2
+                    ],
+                    "ratio": 1,
+                    "offset": 0,
+                    "unit_symbol": "min"
+                },
+                "充电允许": {
+                    "bytes/bit": [
+                        7.1,
+                        0.2
+                    ],
+                    "options": "00: 暂停; 01: 允许"
+                }
+            }
+        },
+        "BSM": {
+            "describe": "动力蓄电池状态信息",
+            "PGN": "0x1300",
+            "priority": 6,
+            "total_bytes": 7,
+            "receive_send": "0x56f4",
+            "optional_count": 0,
+            "data": {
+                "最高单体动力蓄电池电压所在编号": {
+                    "bytes/bit": [
+                        1,
+                        1
+                    ],
+                    "ratio": 1,
+                    "offset": 1,
+                    "unit_symbol": "号"
+                },
+                "最高动力蓄电池温度": {
+                    "bytes/bit": [
+                        2,
+                        1
+                    ],
+                    "ratio": 1,
+                    "offset": -50,
+                    "unit_symbol": "℃"
+                },
+                "最高温度检测点编号": {
+                    "bytes/bit": [
+                        3,
+                        1
+                    ],
+                    "ratio": 1,
+                    "offset": 1,
+                    "unit_symbol": "号"
+                },
+                "最低动力蓄电池温度": {
+                    "bytes/bit": [
+                        4,
+                        1
+                    ],
+                    "ratio": 1,
+                    "offset": -50,
+                    "unit_symbol": "℃"
+                },
+                "最低动力蓄电池温度检测点编号": {
+                    "bytes/bit": [
+                        5,
+                        1
+                    ],
+                    "ratio": 1,
+                    "offset": 1,
+                    "unit_symbol": "号"
+                },
+                "动力蓄电池状态": {
+                    "bytes/bit": [
+                        6,
+                        2
+                    ],
+                    "components": [
+                        {
+                            "bytes/bit": [
+                                6.1,
+                                0.2
+                            ],
+                            "options": "00:正常; 01:过高; 10: 过低"
+                        },
+                        {
+                            "bytes/bit": [
+                                6.3,
+                                0.2
+                            ],
+                            "options": "00:正常; 01:过高; 10: 过低"
+                        },
+                        {
+                            "bytes/bit": [
+                                6.5,
+                                0.2
+                            ],
+                            "options": "00:正常; 01:过流; 10: 不可信状态"
+                        },
+                        {
+                            "bytes/bit": [
+                                6.7,
+                                0.2
+                            ],
+                            "options": "00:正常; 01:过高; 10: 不可信状态"
+                        },
+                        {
+                            "bytes/bit": [
+                                7.1,
+                                0.2
+                            ],
+                            "options": "00:正常; 01:不正常; 10: 不可信状态"
+                        },
+                        {
+                            "bytes/bit": [
+                                7.3,
+                                0.2
+                            ],
+                            "options": "00:正常; 01:不正常; 10: 不可信状态"
+                        },
+                        {
+                            "bytes/bit": [
+                                7.5,
+                                0.2
+                            ],
+                            "options": "00:禁止; 01:允许"
+                        }
+                    ],
+                    "schema": [
+                        1,
+                        "单体动力蓄电池电压: ~, 整车动力蓄电池荷电状态SOC: ~, 动力蓄电池充电过电流: ~, 动力蓄电池温度: ~, 动力蓄电池绝缘状态: ~, 动力蓄电池组输出连接器连接状态: ~, 充电允许: ~"
+                    ]
+                }
+            }
+        },
+        "BMV": {
+            "describe": "单体动力蓄电池电压",
+            "PGN": "0x1500",
+            "priority": 7,
+            "total_bytes": null,
+            "max_count": 256,
+            "receive_send": "0x56f4",
+            "optional_count": "all",
+            "data": {
+                "单体动力蓄电池电压": {
+                    "bytes/bit": [
+                        1,
+                        2
+                    ],
+                    "components": [
+                        {
+                            "bytes/bit": [
+                                1.1,
+                                1.4
+                            ],
+                            "ratio": 0.01,
+                            "offset": 0,
+                            "unit_symbol": "V"
+                        },
+                        {
+                            "bytes/bit": [
+                                2.5,
+                                0.4
+                            ],
+                            "ratio": 1,
+                            "offset": 0,
+                            "unit_symbol": ""
+                        }
+                    ],
+                    "schema": [
+                        1,
+                        "~-分组号~"
+                    ]
+                }
+            }
+        },
+        "BMT": {
+            "describe": "动力蓄电池温度",
+            "PGN": "0x1600",
+            "priority": 7,
+            "total_bytes": null,
+            "max_count": 128,
+            "receive_send": "0x56f4",
+            "optional_count": "all",
+            "data": {
+                "动力蓄电池温度": {
+                    "bytes/bit": [
+                        1,
+                        1
+                    ],
+                    "ratio": 1,
+                    "offset": -50,
+                    "unit_symbol": "℃"
+                }
+            }
+        },
+        "BSP": {
+            "describe": "动力蓄电池预留报文",
+            "PGN": "0x1700",
+            "priority": 7,
+            "total_bytes": null,
+            "cell_bytes": 1,
+            "max_count": 16,
+            "receive_send": "0x56f4",
+            "optional_count": "all",
+            "data": {
+                "动力蓄电池预留字段": {
+                    "bytes/bit": [
+                        1,
+                        1
+                    ],
+                    "ratio": 1,
+                    "offset": 0,
+                    "unit_symbol": ", "
+                }
+            }
+        },
+        "BST": {
+            "describe": "BMS中止充电",
+            "PGN": "0x1900",
+            "priority": 4,
+            "total_bytes": 4,
+            "receive_send": "0x56f4",
+            "optional_count": 0,
+            "data": {
+                "BMS中止充电": {
+                    "bytes/bit": [
+                        1,
+                        1
+                    ],
+                    "components": [
+                        {
+                            "bytes/bit": [
+                                1.1,
+                                0.2
+                            ],
+                            "options": "00: 未达到; 01: 达到; 10: 不可信状态"
+                        },
+                        {
+                            "bytes/bit": [
+                                1.3,
+                                0.2
+                            ],
+                            "options": "00: 未达到; 01: 达到; 10: 不可信状态"
+                        },
+                        {
+                            "bytes/bit": [
+                                1.5,
+                                0.2
+                            ],
+                            "options": "00: 未达到; 01: 达到; 10: 不可信状态"
+                        },
+                        {
+                            "bytes/bit": [
+                                1.7,
+                                0.2
+                            ],
+                            "options": "00: 未终止; 01: 充电机中止(收到CST帧); 10: 不可信状态"
+                        }
+                    ],
+                    "schema": [
+                        1,
+                        "所需求的SOC目标值: ~, 总电压设定值: ~, 单体电压设定值:~, 充电机是否主动终止:~"
+                    ]
+                },
+                "BMS中止充电故障": {
+                    "bytes/bit": [
+                        2,
+                        2
+                    ],
+                    "components": [
+                        {
+                            "bytes/bit": [
+                                2.1,
+                                0.2
+                            ],
+                            "options": "00: 正常; 01: 故障; 10: 不可信状态"
+                        },
+                        {
+                            "bytes/bit": [
+                                2.3,
+                                0.2
+                            ],
+                            "options": "00: 正常; 01: 故障; 10: 不可信状态"
+                        },
+                        {
+                            "bytes/bit": [
+                                2.5,
+                                0.2
+                            ],
+                            "options": "00: 正常; 01: 故障; 10: 不可信状态"
+                        },
+                        {
+                            "bytes/bit": [
+                                2.7,
+                                0.2
+                            ],
+                            "options": "00: 正常; 01: 故障; 10: 不可信状态"
+                        },
+                        {
+                            "bytes/bit": [
+                                3.1,
+                                0.2
+                            ],
+                            "options": "00: 正常; 01: 故障; 10: 不可信状态"
+                        },
+                        {
+                            "bytes/bit": [
+                                3.3,
+                                0.2
+                            ],
+                            "options": "00: 正常; 01: 故障; 10: 不可信状态"
+                        },
+                        {
+                            "bytes/bit": [
+                                3.5,
+                                0.2
+                            ],
+                            "options": "00: 正常; 01: 故障; 10: 不可信状态"
+                        },
+                        {
+                            "bytes/bit": [
+                                3.7,
+                                0.2
+                            ],
+                            "options": "00: 正常; 01: 故障; 10: 不可信状态"
+                        }
+                    ],
+                    "schema": [
+                        1,
+                        "绝缘故障: ~, 输出连接器过温故障: ~, BMS元件、输出连接器过温: ~, 充电连接器故障: ~, 电池组温度过高故障: ~, 高压继电器故障: ~, 检测点2电压检测故障: ~, 其他故障: ~"
+                    ]
+                },
+                "BMS中止充电错误原因": {
+                    "bytes/bit": [
+                        4,
+                        1
+                    ],
+                    "components": [
+                        {
+                            "bytes/bit": [
+                                4.1,
+                                0.2
+                            ],
+                            "options": "00: 电流正常; 01: 电流超过需求值; 10: 不可信状态"
+                        },
+                        {
+                            "bytes/bit": [
+                                4.3,
+                                0.2
+                            ],
+                            "options": "00: 电压正常; 01: 电压异常; 10: 不可信状态"
+                        }
+                    ],
+                    "schema": [
+                        1,
+                        "~ 、~"
+                    ]
+                }
+            }
+        },
+        "CST": {
+            "describe": "充电机中止充电",
+            "PGN": "0x1A00",
+            "priority": 4,
+            "total_bytes": 4,
+            "receive_send": "0xf456",
+            "optional_count": 0,
+            "data": {
+                "充电机中止充电原因": {
+                    "bytes/bit": [
+                        1,
+                        1
+                    ],
+                    "components": [
+                        {
+                            "bytes/bit": [
+                                1.1,
+                                0.2
+                            ],
+                            "options": "00: 正常; 01: 达到; 10: 不可信状态"
+                        },
+                        {
+                            "bytes/bit": [
+                                1.3,
+                                0.2
+                            ],
+                            "options": "00: 正常; 01: 人工; 10: 不可信状态"
+                        },
+                        {
+                            "bytes/bit": [
+                                1.5,
+                                0.2
+                            ],
+                            "options": "00: 正常; 01: 故障; 10: 不可信状态"
+                        },
+                        {
+                            "bytes/bit": [
+                                1.7,
+                                0.2
+                            ],
+                            "options": "00: 正常; 01: BMS(收到BST帧); 10: 不可信状态"
+                        }
+                    ],
+                    "schema": [
+                        1,
+                        "达到充电机设定的条件中止:~, 人工中止:~, 故障中止:~, BMS主动中止:~"
+                    ]
+                },
+                "充电机中止充电故障原因": {
+                    "bytes/bit": [
+                        2,
+                        2
+                    ],
+                    "components": [
+                        {
+                            "bytes/bit": [
+                                2.1,
+                                0.2
+                            ],
+                            "options": "00: 温度正常; 01: 过温故障; 10: 不可信状态"
+                        },
+                        {
+                            "bytes/bit": [
+                                2.3,
+                                0.2
+                            ],
+                            "options": "00: 连接器正常; 01: 连接器正常; 10: 不可信状态"
+                        },
+                        {
+                            "bytes/bit": [
+                                2.5,
+                                0.2
+                            ],
+                            "options": "00: 内部温度正常; 01: 内部过温; 10: 不可信状态"
+                        },
+                        {
+                            "bytes/bit": [
+                                2.7,
+                                0.2
+                            ],
+                            "options": "00: 传送正常; 01: 电量不能传送; 10: 不可信状态"
+                        },
+                        {
+                            "bytes/bit": [
+                                3.1,
+                                0.2
+                            ],
+                            "options": "00: 正常; 01: 已急停; 10: 不可信状态"
+                        },
+                        {
+                            "bytes/bit": [
+                                3.3,
+                                0.2
+                            ],
+                            "options": "00: 正常; 01: 故障; 10: 不可信状态"
+                        }
+                    ],
+                    "schema": [
+                        1,
+                        "充电机过温故障:~, 充电连接器故障:~, 充电机内部过温故障:~, 所需电量不能传送:~, 充电机急停故障:~, 其他故障:~"
+                    ]
+                },
+                "充电机中止充电错误原因": {
+                    "bytes/bit": [
+                        4,
+                        1
+                    ],
+                    "components": [
+                        {
+                            "bytes/bit": [
+                                4.1,
+                                0.2
+                            ],
+                            "options": "00: 正常; 01: 异常; 10: 不可信状态"
+                        },
+                        {
+                            "bytes/bit": [
+                                4.3,
+                                0.2
+                            ],
+                            "options": "00: 正常; 01: 异常; 10: 不可信状态"
+                        }
+                    ],
+                    "schema": [
+                        1,
+                        "电流不匹配:~, 电压异常:~"
+                    ]
+                }
+            }
+        },
+        "BSD": {
+            "describe": "BMS统计数据",
+            "PGN": "0x1C00",
+            "priority": 6,
+            "total_bytes": 7,
+            "receive_send": "0x56f4",
+            "optional_count": 0,
+            "data": {
+                "中止荷电状态SOC(%)": {
+                    "bytes/bit": [
+                        1,
+                        1
+                    ],
+                    "ratio": 1,
+                    "offset": 0,
+                    "unit_symbol": "%"
+                },
+                "动力蓄电池单体最低电压(V)": {
+                    "bytes/bit": [
+                        2,
+                        2
+                    ],
+                    "ratio": 0.01,
+                    "offset": 0,
+                    "unit_symbol": "V"
+                },
+                "动力蓄电池单体最高电压(V)": {
+                    "bytes/bit": [
+                        4,
+                        2
+                    ],
+                    "ratio": 0.01,
+                    "offset": 0,
+                    "unit_symbol": "V"
+                },
+                "动力蓄电池最低温度(℃)": {
+                    "bytes/bit": [
+                        6,
+                        1
+                    ],
+                    "ratio": 1,
+                    "offset": -50,
+                    "unit_symbol": "℃"
+                },
+                "动力蓄电池最高温度(℃)": {
+                    "bytes/bit": [
+                        7,
+                        1
+                    ],
+                    "ratio": 1,
+                    "offset": -50,
+                    "unit_symbol": "℃"
+                }
+            }
+        },
+        "CSD": {
+            "describe": "充电机统计数据",
+            "PGN": "0x1D00",
+            "priority": 6,
+            "total_bytes": 8,
+            "receive_send": "0xf456",
+            "optional_count": 0,
+            "data": {
+                "累计充电时间(min)": {
+                    "bytes/bit": [
+                        1,
+                        2
+                    ],
+                    "ratio": 1,
+                    "offset": 0,
+                    "unit_symbol": "min"
+                },
+                "输出能量(KW*h)": {
+                    "bytes/bit": [
+                        3,
+                        2
+                    ],
+                    "ratio": 0.01,
+                    "offset": 0,
+                    "unit_symbol": "KW*h"
+                },
+                "充电机编号": {
+                    "bytes/bit": [
+                        5,
+                        4
+                    ],
+                    "type": "int"
+                }
+            }
+        },
+        "BEM": {
+            "describe": "BMS错误报文",
+            "PGN": "0x1E00",
+            "priority": 2,
+            "total_bytes": 4,
+            "receive_send": "0x56f4",
+            "optional_count": 1,
+            "data": {
+                "BMS错误报文": {
+                    "bytes/bit": [
+                        1,
+                        4
+                    ],
+                    "components": [
+                        {
+                            "bytes/bit": [
+                                1.1,
+                                0.2
+                            ],
+                            "options": "00: 正常; 01: 超时; 10: 不可信状态"
+                        },
+                        {
+                            "bytes/bit": [
+                                1.3,
+                                0.2
+                            ],
+                            "options": "00: 正常; 01: 超时; 10: 不可信状态"
+                        },
+                        {
+                            "bytes/bit": [
+                                2.1,
+                                0.2
+                            ],
+                            "options": "00: 正常; 01: 超时; 10: 不可信状态"
+                        },
+                        {
+                            "bytes/bit": [
+                                2.3,
+                                0.2
+                            ],
+                            "options": "00: 正常; 01: 超时; 10: 不可信状态"
+                        },
+                        {
+                            "bytes/bit": [
+                                3.1,
+                                0.2
+                            ],
+                            "options": "00: 正常; 01: 超时; 10: 不可信状态"
+                        },
+                        {
+                            "bytes/bit": [
+                                3.3,
+                                0.2
+                            ],
+                            "options": "00: 正常; 01: 超时; 10: 不可信状态"
+                        },
+                        {
+                            "bytes/bit": [
+                                4.1,
+                                0.2
+                            ],
+                            "options": "00: 正常; 01: 超时; 10: 不可信状态"
+                        },
+                        {
+                            "bytes/bit": [
+                                4.3,
+                                0.6
+                            ],
+                            "type": "int"
+                        }
+                    ],
+                    "schema": [
+                        1,
+                        "接收CRM-BMS不能辨识的充电机辨识报文超时: ~, 接收CRM-BMS不能辨识的充电机辨识报文超时: ~, 接收充电机的时间同步和充电机最大输出能力报文超时: ~, 接收充电机完成充电准备报文超时: ~, 接收充电机充电状态报文超时: ~, 接收充电机中止充电报文超时: ~, 接收充电机充电统计报文超时：~"
+                    ]
+                }
+            }
+        },
+        "CEM": {
+            "describe": "充电机错误报文",
+            "PGN": "0x1F00",
+            "priority": 2,
+            "total_bytes": 4,
+            "receive_send": "0xf456",
+            "optional_count": 1,
+            "data": {
+                "BMS错误报文": {
+                    "bytes/bit": [
+                        1,
+                        4
+                    ],
+                    "components": [
+                        {
+                            "bytes/bit": [
+                                1.1,
+                                0.2
+                            ],
+                            "options": "00: 正常; 01: 超时; 10: 不可信状态"
+                        },
+                        {
+                            "bytes/bit": [
+                                1.3,
+                                0.2
+                            ],
+                            "options": "00: 正常; 01: 超时; 10: 不可信状态"
+                        },
+                        {
+                            "bytes/bit": [
+                                2.1,
+                                0.2
+                            ],
+                            "options": "00: 正常; 01: 超时; 10: 不可信状态"
+                        },
+                        {
+                            "bytes/bit": [
+                                2.3,
+                                0.2
+                            ],
+                            "options": "00: 正常; 01: 超时; 10: 不可信状态"
+                        },
+                        {
+                            "bytes/bit": [
+                                3.1,
+                                0.2
+                            ],
+                            "options": "00: 正常; 01: 超时; 10: 不可信状态"
+                        },
+                        {
+                            "bytes/bit": [
+                                3.3,
+                                0.2
+                            ],
+                            "options": "00: 正常; 01: 超时; 10: 不可信状态"
+                        },
+                        {
+                            "bytes/bit": [
+                                4.1,
+                                0.2
+                            ],
+                            "options": "00: 正常; 01: 超时; 10: 不可信状态"
+                        },
+                        {
+                            "bytes/bit": [
+                                4.3,
+                                0.6
+                            ],
+                            "type": "int"
+                        }
+                    ],
+                    "schema": [
+                        1,
+                        "接收BMS和车辆的辨识报文超时: ~, 接收电池充电参数报文超时: ~, 接收BMS完成充电准备报文超时: ~, 接收电池充电总状态报文超时: ~, 接收电池充电要求报文超时: ~, 接收BMS中止充电报文超时: ~, 接收BMS充电统计报文超时~, 其他: ~"
+                    ]
+                }
+            }
+        }
+    },
+    "宇通": 
+    {
+        "CHM": {
+            "describe": "充电机握手",
+            "PGN": "0x2600",
+            "priority": 6,
+            "total_bytes": 3,
+            "receive_send": "0xf456",
+            "optional_count": 0,
+            "data": {
+                "BMS协议版本": {
+                    "bytes/bit": [
+                        1,
+                        3
+                    ],
+                    "options": "534331: SC1; 101: V1.1"
+                }
+            }
+        },
+        "BHM": {
+            "describe": "车辆握手",
+            "PGN": "0x2700",
+            "priority": 6,
+            "total_bytes": 2,
+            "receive_send": "0x56f4",
+            "optional_count": 0,
+            "data": {
+                "最高允许充电总电压": {
+                    "bytes/bit": [
+                        1,
+                        2
+                    ],
+                    "ratio": 0.1,
+                    "offset": 0,
+                    "unit_symbol": "V"
+                }
+            }
+        },
+        "CFC":{
+            "describe": "充电机电流偏移量识别报文",
+            "PGN": "0x3100",
+            "priority": 6,
+            "total_bytes": 2,
+            "receive_send": "0x56f4",
+            "optional_count": 0,
+            "data":{
+                "电流偏移量": {
+                    "bytes/bit": [
+                        1,
+                        2
+                    ],
+                    "ratio": 100,
+                    "offset": 0,
+                    "unit_symbol": "A"
+                },
+                "辨识信息": {
+                    "bytes/bit": [
+                        2,
+                        1
+                    ],
+                    "components":[
+                        {
+                            "bytes/bit": [
+                                2.1,
+                                0.4
+                            ],
+                            "ratio": 1,
+                            "offset": 0,
+                            "unit_symbol": "把"
+                        },
+                        {
+                            "bytes/bit": [
+                                2.5,
+                                0.2
+                            ],
+                            "options": "00:发送信息; 01:收BFC但信息不一致; 11:收BFC信息一致"
+                        }
+                    ],
+                    "schema": [
+                        1,
+                        "充电枪: ~; 识别情况: ~"
+                    ]
+                }
+            }
+        },
+        "BFC": {
+            "describe": "BMS电流偏移量识别报文",
+            "PGN": "0x3000",
+            "priority": 6,
+            "total_bytes": 2,
+            "receive_send": "0xf456",
+            "optional_count": 0,
+            "data":{
+                "电流偏移量": {
+                    "bytes/bit": [
+                        1,
+                        2
+                    ],
+                    "ratio": 100,
+                    "offset": 0,
+                    "unit_symbol": "A"
+                },
+                "充电枪数量": {
+                    "bytes/bit": [
+                        2,
+                        1
+                    ],
+                    "components":[
+                        {
+                            "bytes/bit": [
+                                2.1,
+                                0.4
+                            ],
+                            "ratio": 1,
+                            "offset": 0,
+                            "unit_symbol": "把"
+                        },
+                        {
+                            "bytes/bit": [
+                                2.5,
+                                0.2
+                            ],
+                            "options": "00: 没有收到CFC; 01: 收CFC但信息不一致; 11: 收CFC信息一致"
+                        }
+                    ],
+                    "schema": [
+                        1,
+                        "充电枪: ~; 识别情况: ~"
+                    ]
+                }
+            }
+        },
+        "CRM": {
+            "describe": "充电机辨识",
+            "PGN": "0x0100",
+            "priority": 6,
+            "total_bytes": 8,
+            "receive_send": "0xf456",
+            "optional_count": 1,
+            "data": {
+                "CRM-辨识结果": {
+                    "bytes/bit": [
+                        1,
+                        1
+                    ],
+                    "options": "00: BMS不能辨识; AA: BMS能辨识"
+                },
+                "充电机编号": {
+                    "bytes/bit": [
+                        2,
+                        4
+                    ],
+                    "type": "int"
+                },
+                "充电机所在区域编码": {
+                    "bytes/bit": [
+                        6,
+                        3
+                    ],
+                    "type": "ascii"
+                }
+            }
+        },
+        "BRM": {
+            "describe": "BMS和车辆辨识报文",
+            "PGN": "0x0200",
+            "priority": 7,
+            "total_bytes": 41,
+            "receive_send": "0x56f4",
+            "optional_count": 10,
+            "data": {
+                "BMS协议版本": {
+                    "bytes/bit": [
+                        1,
+                        3
+                    ],
+                    "options": "534331: SC1; 101: V1.1"
+                },
+                "电池类型": {
+                    "bytes/bit": [
+                        4,
+                        1
+                    ],
+                    "options": "01: 铅酸电池; 02: 镍氢电池; 03: 磷酸铁锂电池; 04: 锰酸锂电池; 05: 钴酸锂电池; 06: 三元材料电池; 07: 聚合物锂离子电池; 08: 钛酸锂电池; ff: 其他电池"
+                },
+                "整车动力蓄电池系统额定容量/Ah": {
+                    "bytes/bit": [
+                        5,
+                        2
+                    ],
+                    "ratio": 0.1,
+                    "offset": 0,
+                    "unit_symbol": "Ah"
+                },
+                "整车动力蓄电池系统额定总电压/V": {
+                    "bytes/bit": [
+                        7,
+                        2
+                    ],
+                    "ratio": 0.1,
+                    "offset": 0,
+                    "unit_symbol": "V"
+                },
+                "电池生产厂商名称": {
+                    "bytes/bit": [
+                        9,
+                        4
+                    ],
+                    "type": "ascii"
+                },
+                "电池组序号": {
+                    "bytes/bit": [
+                        13,
+                        4
+                    ],
+                    "type": "int"
+                },
+                "电池组生产日期": {
+                    "bytes/bit": [
+                        17,
+                        3
+                    ],
+                    "components": [
+                        {
+                            "bytes/bit": [
+                                17,
+                                1
+                            ],
+                            "ratio": 1,
+                            "offset": 1985,
+                            "unit_symbol": ""
+                        },
+                        {
+                            "bytes/bit": [
+                                18,
+                                1
+                            ],
+                            "ratio": 1,
+                            "offset": 0,
+                            "unit_symbol": ""
+                        },
+                        {
+                            "bytes/bit": [
+                                19,
+                                1
+                            ],
+                            "ratio": 1,
+                            "offset": 0,
+                            "unit_symbol": ""
+                        }
+                    ],
+                    "schema": [
+                        1,
+                        "~年~月~日"
+                    ]
+                },
+                "电池组充电次数": {
+                    "bytes/bit": [
+                        20,
+                        3
+                    ],
+                    "ratio": 1,
+                    "offset": 0,
+                    "unit_symbol": "次"
+                },
+                "电池组产权标识": {
+                    "bytes/bit": [
+                        23,
+                        1
+                    ],
+                    "options": "0: 租赁; 1: 车自有"
+                },
+                "预留": {
+                    "bytes/bit": [
+                        24,
+                        1
+                    ],
+                    "type": "int"
+                },
+                "车辆识别码(VIN)": {
+                    "bytes/bit": [
+                        25,
+                        17
+                    ],
+                    "type": "ascii"
+                },
+                "BMS软件版本": {
+                    "bytes/bit": [
+                        42,
+                        8
+                    ],
+                    "components": [
+                        {
+                            "bytes/bit": [
+                                43,
+                                1
+                            ],
+                            "type": "int"
+                        },
+                        {
+                            "bytes/bit": [
+                                44,
+                                1
+                            ],
+                            "type": "int"
+                        },
+                        {
+                            "bytes/bit": [
+                                45,
+                                1
+                            ],
+                            "type": "int"
+                        },
+                        {
+                            "bytes/bit": [
+                                46,
+                                2
+                            ],
+                            "type": "int"
+                        }
+                    ],
+                    "schema": [
+                        -1,
+                        "BMS当前使用~年~月~日第~次编译版本"
+                    ]
+                }
+            }
+        },
+        "BCP": {
+            "describe": "动力蓄电池充电参数",
+            "PGN": "0x0600",
+            "priority": 7,
+            "total_bytes": 13,
+            "receive_send": "0x56f4",
+            "optional_count": 0,
+            "data": {
+                "单体动力蓄电池最高允许充电电压": {
+                    "bytes/bit": [
+                        1,
+                        2
+                    ],
+                    "ratio": 0.01,
+                    "offset": 0,
+                    "unit_symbol": "V"
+                },
+                "最高允许充电电流": {
+                    "bytes/bit": [
+                        3,
+                        2
+                    ],
+                    "ratio": 0.1,
+                    "offset": -600,
+                    "unit_symbol": "A"
+                },
+                "动力蓄电池标称总能量": {
+                    "bytes/bit": [
+                        5,
+                        2
+                    ],
+                    "ratio": 0.1,
+                    "offset": 0,
+                    "unit_symbol": "KW*h"
+                },
+                "最高允许充电总电压": {
+                    "bytes/bit": [
+                        7,
+                        2
+                    ],
+                    "ratio": 0.1,
+                    "offset": 0,
+                    "unit_symbol": "V"
+                },
+                "最高允许温度": {
+                    "bytes/bit": [
+                        9,
+                        1
+                    ],
+                    "ratio": 1,
+                    "offset": -50,
+                    "unit_symbol": "℃"
+                },
+                "整车动力蓄电池荷电状态(SOC)": {
+                    "bytes/bit": [
+                        10,
+                        2
+                    ],
+                    "ratio": 0.1,
+                    "offset": 0,
+                    "unit_symbol": "%"
+                },
+                "整车动力蓄电池当前电池电压": {
+                    "bytes/bit": [
+                        12,
+                        2
+                    ],
+                    "ratio": 0.1,
+                    "offset": 0,
+                    "unit_symbol": "V"
+                }
+            }
+        },
+        "CTS": {
+            "describe": "充电机发送时间同步信息",
+            "PGN": "0x0700",
+            "priority": 6,
+            "total_bytes": 7,
+            "receive_send": "0xf456",
+            "optional_count": 1,
+            "data": {
+                "同步时间": {
+                    "bytes/bit": [
+                        1,
+                        7
+                    ],
+                    "components": [
+                        {
+                            "bytes/bit": [
+                                1,
+                                1
+                            ],
+                            "type": "BCD"
+                        },
+                        {
+                            "bytes/bit": [
+                                2,
+                                1
+                            ],
+                            "type": "BCD"
+                        },
+                        {
+                            "bytes/bit": [
+                                3,
+                                1
+                            ],
+                            "type": "BCD"
+                        },
+                        {
+                            "bytes/bit": [
+                                4,
+                                1
+                            ],
+                            "type": "BCD"
+                        },
+                        {
+                            "bytes/bit": [
+                                5,
+                                1
+                            ],
+                            "type": "BCD"
+                        },
+                        {
+                            "bytes/bit": [
+                                6,
+                                2
+                            ],
+                            "type": "int"
+                        }
+                    ],
+                    "schema": [
+                        -1,
+                        "~年~月~日~时~分~秒"
+                    ]
+                }
+            }
+        },
+        "CML": {
+            "describe": "充电机最大输出能力",
+            "PGN": "0x0800",
+            "priority": 6,
+            "total_bytes": 8,
+            "receive_send": "0xf456",
+            "optional_count": 0,
+            "data": {
+                "最高输出电压(V)": {
+                    "bytes/bit": [
+                        1,
+                        2
+                    ],
+                    "ratio": 0.1,
+                    "offset": 0,
+                    "unit_symbol": "V"
+                },
+                "最低输出电压(V)": {
+                    "bytes/bit": [
+                        3,
+                        2
+                    ],
+                    "ratio": 0.1,
+                    "offset": 0,
+                    "unit_symbol": "V"
+                },
+                "最高输出电流(A)": {
+                    "bytes/bit": [
+                        5,
+                        2
+                    ],
+                    "ratio": 0.1,
+                    "offset": -600,
+                    "unit_symbol": "A"
+                },
+                "最低输出电流(A)": {
+                    "bytes/bit": [
+                        7,
+                        2
+                    ],
+                    "ratio": 0.1,
+                    "offset": -600,
+                    "unit_symbol": "A"
+                }
+            }
+        },
+        "BRO": {
+            "describe": "电池充电准备就绪状态",
+            "PGN": "0x0900",
+            "priority": 4,
+            "total_bytes": 1,
+            "receive_send": "0x56f4",
+            "optional_count": 0,
+            "data": {
+                "BMS是否充电准备好": {
+                    "bytes/bit": [
+                        1,
+                        1
+                    ],
+                    "options": "00: BMS未做好充电准备; AA: BMS完成充电准备; FF: 无效"
+                }
+            }
+        },
+        "CRO": {
+            "describe": "充电机输出准备就绪状态",
+            "PGN": "0x0A00",
+            "priority": 4,
+            "total_bytes": 1,
+            "receive_send": "0xf456",
+            "optional_count": 0,
+            "data": {
+                "充电机是否准备好": {
+                    "bytes/bit": [
+                        1,
+                        1
+                    ],
+                    "options": "00: 充电机未做好充电准备; AA: 充电机完成充电准备; FF: 无效"
+                }
+            }
+        },
+        "BCL": {
+            "describe": "电池充电需求",
+            "PGN": "0x1000",
+            "priority": 6,
+            "total_bytes": 5,
+            "receive_send": "0x56f4",
+            "optional_count": 0,
+            "data": {
+                "电压需求(V)": {
+                    "bytes/bit": [
+                        1,
+                        2
+                    ],
+                    "ratio": 0.1,
+                    "offset": 0,
+                    "unit_symbol": "V"
+                },
+                "电流需求(A)": {
+                    "bytes/bit": [
+                        3,
+                        2
+                    ],
+                    "ratio": 0.1,
+                    "offset": -600,
+                    "unit_symbol": "A"
+                },
+                "充电模式": {
+                    "bytes/bit": [
+                        5,
+                        1
+                    ],
+                    "options": "01: 恒压充电; 02: 恒流充电"
+                }
+            }
+        },
+        "BCS": {
+            "describe": "电池充电总状态",
+            "PGN": "0x1100",
+            "priority": 7,
+            "total_bytes": 9,
+            "receive_send": "0x56f4",
+            "optional_count": 0,
+            "data": {
+                "充电电压测量值": {
+                    "bytes/bit": [
+                        1,
+                        2
+                    ],
+                    "ratio": 0.1,
+                    "offset": 0,
+                    "unit_symbol": "V"
+                },
+                "充电电流测量值": {
+                    "bytes/bit": [
+                        3,
+                        2
+                    ],
+                    "ratio": 0.1,
+                    "offset": -600,
+                    "unit_symbol": "A"
+                },
+                "最高单体动力蓄电池电压及其组号": {
+                    "bytes/bit": [
+                        5,
+                        2
+                    ],
+                    "components": [
+                        {
+                            "bytes/bit": [
+                                5.1,
+                                1.4
+                            ],
+                            "ratio": 0.01,
+                            "offset": 0,
+                            "unit_symbol": "V"
+                        },
+                        {
+                            "bytes/bit": [
+                                6.5,
+                                0.4
+                            ],
+                            "ratio": 1,
+                            "offset": 0,
+                            "unit_symbol": ""
+                        }
+                    ],
+                    "schema": [
+                        1,
+                        "~ 组号~"
+                    ]
+                },
+                "当前荷电状态SOC(%)": {
+                    "bytes/bit": [
+                        7,
+                        1
+                    ],
+                    "ratio": 1,
+                    "offset": 0,
+                    "unit_symbol": "%"
+                },
+                "估算剩余充电时间": {
+                    "bytes/bit": [
+                        8,
+                        2
+                    ],
+                    "ratio": 1,
+                    "offset": 0,
+                    "unit_symbol": "min"
+                }
+            }
+        },
+        "CCS": {
+            "describe": "充电机充电状态",
+            "PGN": "0x1200",
+            "priority": 6,
+            "total_bytes": 7,
+            "receive_send": "0xf456",
+            "optional_count": 0,
+            "data": {
+                "电压输出值": {
+                    "bytes/bit": [
+                        1,
+                        2
+                    ],
+                    "ratio": 0.1,
+                    "offset": 0,
+                    "unit_symbol": "V"
+                },
+                "电流输出值": {
+                    "bytes/bit": [
+                        3,
+                        2
+                    ],
+                    "ratio": 0.1,
+                    "offset": -600,
+                    "unit_symbol": "A"
+                },
+                "累计充电时间": {
+                    "bytes/bit": [
+                        5,
+                        2
+                    ],
+                    "ratio": 1,
+                    "offset": 0,
+                    "unit_symbol": "min"
+                },
+                "充电允许": {
+                    "bytes/bit": [
+                        7.1,
+                        0.2
+                    ],
+                    "options": "00: 暂停; 01: 允许"
+                }
+            }
+        },
+        "BSM": {
+            "describe": "动力蓄电池状态信息",
+            "PGN": "0x1300",
+            "priority": 6,
+            "total_bytes": 7,
+            "receive_send": "0x56f4",
+            "optional_count": 0,
+            "data": {
+                "最高单体动力蓄电池电压所在编号": {
+                    "bytes/bit": [
+                        1,
+                        1
+                    ],
+                    "ratio": 1,
+                    "offset": 1,
+                    "unit_symbol": "号"
+                },
+                "最高动力蓄电池温度": {
+                    "bytes/bit": [
+                        2,
+                        1
+                    ],
+                    "ratio": 1,
+                    "offset": -50,
+                    "unit_symbol": "℃"
+                },
+                "最高温度检测点编号": {
+                    "bytes/bit": [
+                        3,
+                        1
+                    ],
+                    "ratio": 1,
+                    "offset": 1,
+                    "unit_symbol": "号"
+                },
+                "最低动力蓄电池温度": {
+                    "bytes/bit": [
+                        4,
+                        1
+                    ],
+                    "ratio": 1,
+                    "offset": -50,
+                    "unit_symbol": "℃"
+                },
+                "最低动力蓄电池温度检测点编号": {
+                    "bytes/bit": [
+                        5,
+                        1
+                    ],
+                    "ratio": 1,
+                    "offset": 1,
+                    "unit_symbol": "号"
+                },
+                "动力蓄电池状态": {
+                    "bytes/bit": [
+                        6,
+                        2
+                    ],
+                    "components": [
+                        {
+                            "bytes/bit": [
+                                6.1,
+                                0.2
+                            ],
+                            "options": "00:正常; 01:过高; 10: 过低"
+                        },
+                        {
+                            "bytes/bit": [
+                                6.3,
+                                0.2
+                            ],
+                            "options": "00:正常; 01:过高; 10: 过低"
+                        },
+                        {
+                            "bytes/bit": [
+                                6.5,
+                                0.2
+                            ],
+                            "options": "00:正常; 01:过流; 10: 不可信状态"
+                        },
+                        {
+                            "bytes/bit": [
+                                6.7,
+                                0.2
+                            ],
+                            "options": "00:正常; 01:过高; 10: 不可信状态"
+                        },
+                        {
+                            "bytes/bit": [
+                                7.1,
+                                0.2
+                            ],
+                            "options": "00:正常; 01:不正常; 10: 不可信状态"
+                        },
+                        {
+                            "bytes/bit": [
+                                7.3,
+                                0.2
+                            ],
+                            "options": "00:正常; 01:不正常; 10: 不可信状态"
+                        },
+                        {
+                            "bytes/bit": [
+                                7.5,
+                                0.2
+                            ],
+                            "options": "00:禁止; 01:允许"
+                        }
+                    ],
+                    "schema": [
+                        1,
+                        "单体动力蓄电池电压: ~, 整车动力蓄电池荷电状态SOC: ~, 动力蓄电池充电过电流: ~, 动力蓄电池温度: ~, 动力蓄电池绝缘状态: ~, 动力蓄电池组输出连接器连接状态: ~, 充电允许: ~"
+                    ]
+                }
+            }
+        },
+        "BMV": {
+            "describe": "单体动力蓄电池电压",
+            "PGN": "0x1500",
+            "priority": 7,
+            "total_bytes": null,
+            "max_count": 256,
+            "receive_send": "0x56f4",
+            "optional_count": "all",
+            "data": {
+                "单体动力蓄电池电压": {
+                    "bytes/bit": [
+                        1,
+                        2
+                    ],
+                    "components": [
+                        {
+                            "bytes/bit": [
+                                1.1,
+                                1.4
+                            ],
+                            "ratio": 0.01,
+                            "offset": 0,
+                            "unit_symbol": "V"
+                        },
+                        {
+                            "bytes/bit": [
+                                2.5,
+                                0.4
+                            ],
+                            "ratio": 1,
+                            "offset": 0,
+                            "unit_symbol": ""
+                        }
+                    ],
+                    "schema": [
+                        1,
+                        "~-分组号~"
+                    ]
+                }
+            }
+        },
+        "BMT": {
+            "describe": "动力蓄电池温度",
+            "PGN": "0x1600",
+            "priority": 7,
+            "total_bytes": null,
+            "max_count": 128,
+            "receive_send": "0x56f4",
+            "optional_count": "all",
+            "data": {
+                "动力蓄电池温度": {
+                    "bytes/bit": [
+                        1,
+                        1
+                    ],
+                    "ratio": 1,
+                    "offset": -50,
+                    "unit_symbol": "℃"
+                }
+            }
+        },
+        "BSP": {
+            "describe": "动力蓄电池预留报文",
+            "PGN": "0x1700",
+            "priority": 7,
+            "total_bytes": null,
+            "cell_bytes": 1,
+            "max_count": 16,
+            "receive_send": "0x56f4",
+            "optional_count": "all",
+            "data": {
+                "动力蓄电池预留字段": {
+                    "bytes/bit": [
+                        1,
+                        1
+                    ],
+                    "ratio": 1,
+                    "offset": 0,
+                    "unit_symbol": ", "
+                }
+            }
+        },
+        "BST": {
+            "describe": "BMS中止充电",
+            "PGN": "0x1900",
+            "priority": 4,
+            "total_bytes": 4,
+            "receive_send": "0x56f4",
+            "optional_count": 0,
+            "data": {
+                "BMS中止充电": {
+                    "bytes/bit": [
+                        1,
+                        1
+                    ],
+                    "components": [
+                        {
+                            "bytes/bit": [
+                                1.1,
+                                0.2
+                            ],
+                            "options": "00: 未达到; 01: 达到; 10: 不可信状态"
+                        },
+                        {
+                            "bytes/bit": [
+                                1.3,
+                                0.2
+                            ],
+                            "options": "00: 未达到; 01: 达到; 10: 不可信状态"
+                        },
+                        {
+                            "bytes/bit": [
+                                1.5,
+                                0.2
+                            ],
+                            "options": "00: 未达到; 01: 达到; 10: 不可信状态"
+                        },
+                        {
+                            "bytes/bit": [
+                                1.7,
+                                0.2
+                            ],
+                            "options": "00: 未终止; 01: 充电机中止(收到CST帧); 10: 不可信状态"
+                        }
+                    ],
+                    "schema": [
+                        1,
+                        "所需求的SOC目标值: ~, 总电压设定值: ~, 单体电压设定值:~, 充电机是否主动终止:~"
+                    ]
+                },
+                "BMS中止充电故障": {
+                    "bytes/bit": [
+                        2,
+                        2
+                    ],
+                    "components": [
+                        {
+                            "bytes/bit": [
+                                2.1,
+                                0.2
+                            ],
+                            "options": "00: 正常; 01: 故障; 10: 不可信状态"
+                        },
+                        {
+                            "bytes/bit": [
+                                2.3,
+                                0.2
+                            ],
+                            "options": "00: 正常; 01: 故障; 10: 不可信状态"
+                        },
+                        {
+                            "bytes/bit": [
+                                2.5,
+                                0.2
+                            ],
+                            "options": "00: 正常; 01: 故障; 10: 不可信状态"
+                        },
+                        {
+                            "bytes/bit": [
+                                2.7,
+                                0.2
+                            ],
+                            "options": "00: 正常; 01: 故障; 10: 不可信状态"
+                        },
+                        {
+                            "bytes/bit": [
+                                3.1,
+                                0.2
+                            ],
+                            "options": "00: 正常; 01: 故障; 10: 不可信状态"
+                        },
+                        {
+                            "bytes/bit": [
+                                3.3,
+                                0.2
+                            ],
+                            "options": "00: 正常; 01: 故障; 10: 不可信状态"
+                        },
+                        {
+                            "bytes/bit": [
+                                3.5,
+                                0.2
+                            ],
+                            "options": "00: 正常; 01: 故障; 10: 不可信状态"
+                        },
+                        {
+                            "bytes/bit": [
+                                3.7,
+                                0.2
+                            ],
+                            "options": "00: 正常; 01: 故障; 10: 不可信状态"
+                        }
+                    ],
+                    "schema": [
+                        1,
+                        "绝缘故障: ~, 输出连接器过温故障: ~, BMS元件、输出连接器过温: ~, 充电连接器故障: ~, 电池组温度过高故障: ~, 高压继电器故障: ~, 检测点2电压检测故障: ~, 其他故障: ~"
+                    ]
+                },
+                "BMS中止充电错误原因": {
+                    "bytes/bit": [
+                        4,
+                        1
+                    ],
+                    "components": [
+                        {
+                            "bytes/bit": [
+                                4.1,
+                                0.2
+                            ],
+                            "options": "00: 电流正常; 01: 电流超过需求值; 10: 不可信状态"
+                        },
+                        {
+                            "bytes/bit": [
+                                4.3,
+                                0.2
+                            ],
+                            "options": "00: 电压正常; 01: 电压异常; 10: 不可信状态"
+                        }
+                    ],
+                    "schema": [
+                        1,
+                        "~ 、~"
+                    ]
+                }
+            }
+        },
+        "CST": {
+            "describe": "充电机中止充电",
+            "PGN": "0x1A00",
+            "priority": 4,
+            "total_bytes": 4,
+            "receive_send": "0xf456",
+            "optional_count": 0,
+            "data": {
+                "充电机中止充电原因": {
+                    "bytes/bit": [
+                        1,
+                        1
+                    ],
+                    "components": [
+                        {
+                            "bytes/bit": [
+                                1.1,
+                                0.2
+                            ],
+                            "options": "00: 正常; 01: 达到; 10: 不可信状态"
+                        },
+                        {
+                            "bytes/bit": [
+                                1.3,
+                                0.2
+                            ],
+                            "options": "00: 正常; 01: 人工; 10: 不可信状态"
+                        },
+                        {
+                            "bytes/bit": [
+                                1.5,
+                                0.2
+                            ],
+                            "options": "00: 正常; 01: 故障; 10: 不可信状态"
+                        },
+                        {
+                            "bytes/bit": [
+                                1.7,
+                                0.2
+                            ],
+                            "options": "00: 正常; 01: BMS(收到BST帧); 10: 不可信状态"
+                        }
+                    ],
+                    "schema": [
+                        1,
+                        "达到充电机设定的条件中止:~, 人工中止:~, 故障中止:~, BMS主动中止:~"
+                    ]
+                },
+                "充电机中止充电故障原因": {
+                    "bytes/bit": [
+                        2,
+                        2
+                    ],
+                    "components": [
+                        {
+                            "bytes/bit": [
+                                2.1,
+                                0.2
+                            ],
+                            "options": "00: 温度正常; 01: 过温故障; 10: 不可信状态"
+                        },
+                        {
+                            "bytes/bit": [
+                                2.3,
+                                0.2
+                            ],
+                            "options": "00: 连接器正常; 01: 连接器正常; 10: 不可信状态"
+                        },
+                        {
+                            "bytes/bit": [
+                                2.5,
+                                0.2
+                            ],
+                            "options": "00: 内部温度正常; 01: 内部过温; 10: 不可信状态"
+                        },
+                        {
+                            "bytes/bit": [
+                                2.7,
+                                0.2
+                            ],
+                            "options": "00: 传送正常; 01: 电量不能传送; 10: 不可信状态"
+                        },
+                        {
+                            "bytes/bit": [
+                                3.1,
+                                0.2
+                            ],
+                            "options": "00: 正常; 01: 已急停; 10: 不可信状态"
+                        },
+                        {
+                            "bytes/bit": [
+                                3.3,
+                                0.2
+                            ],
+                            "options": "00: 正常; 01: 故障; 10: 不可信状态"
+                        }
+                    ],
+                    "schema": [
+                        1,
+                        "充电机过温故障:~, 充电连接器故障:~, 充电机内部过温故障:~, 所需电量不能传送:~, 充电机急停故障:~, 其他故障:~"
+                    ]
+                },
+                "充电机中止充电错误原因": {
+                    "bytes/bit": [
+                        4,
+                        1
+                    ],
+                    "components": [
+                        {
+                            "bytes/bit": [
+                                4.1,
+                                0.2
+                            ],
+                            "options": "00: 正常; 01: 异常; 10: 不可信状态"
+                        },
+                        {
+                            "bytes/bit": [
+                                4.3,
+                                0.2
+                            ],
+                            "options": "00: 正常; 01: 异常; 10: 不可信状态"
+                        }
+                    ],
+                    "schema": [
+                        1,
+                        "电流不匹配:~, 电压异常:~"
+                    ]
+                }
+            }
+        },
+        "BSD": {
+            "describe": "BMS统计数据",
+            "PGN": "0x1C00",
+            "priority": 6,
+            "total_bytes": 7,
+            "receive_send": "0x56f4",
+            "optional_count": 0,
+            "data": {
+                "中止荷电状态SOC(%)": {
+                    "bytes/bit": [
+                        1,
+                        1
+                    ],
+                    "ratio": 1,
+                    "offset": 0,
+                    "unit_symbol": "%"
+                },
+                "动力蓄电池单体最低电压(V)": {
+                    "bytes/bit": [
+                        2,
+                        2
+                    ],
+                    "ratio": 0.01,
+                    "offset": 0,
+                    "unit_symbol": "V"
+                },
+                "动力蓄电池单体最高电压(V)": {
+                    "bytes/bit": [
+                        4,
+                        2
+                    ],
+                    "ratio": 0.01,
+                    "offset": 0,
+                    "unit_symbol": "V"
+                },
+                "动力蓄电池最低温度(℃)": {
+                    "bytes/bit": [
+                        6,
+                        1
+                    ],
+                    "ratio": 1,
+                    "offset": -50,
+                    "unit_symbol": "℃"
+                },
+                "动力蓄电池最高温度(℃)": {
+                    "bytes/bit": [
+                        7,
+                        1
+                    ],
+                    "ratio": 1,
+                    "offset": -50,
+                    "unit_symbol": "℃"
+                }
+            }
+        },
+        "CSD": {
+            "describe": "充电机统计数据",
+            "PGN": "0x1D00",
+            "priority": 6,
+            "total_bytes": 8,
+            "receive_send": "0xf456",
+            "optional_count": 0,
+            "data": {
+                "累计充电时间(min)": {
+                    "bytes/bit": [
+                        1,
+                        2
+                    ],
+                    "ratio": 1,
+                    "offset": 0,
+                    "unit_symbol": "min"
+                },
+                "输出能量(KW*h)": {
+                    "bytes/bit": [
+                        3,
+                        2
+                    ],
+                    "ratio": 0.01,
+                    "offset": 0,
+                    "unit_symbol": "KW*h"
+                },
+                "充电机编号": {
+                    "bytes/bit": [
+                        5,
+                        4
+                    ],
+                    "type": "int"
+                }
+            }
+        },
+        "BEM": {
+            "describe": "BMS错误报文",
+            "PGN": "0x1E00",
+            "priority": 2,
+            "total_bytes": 4,
+            "receive_send": "0x56f4",
+            "optional_count": 1,
+            "data": {
+                "BMS错误报文": {
+                    "bytes/bit": [
+                        1,
+                        4
+                    ],
+                    "components": [
+                        {
+                            "bytes/bit": [
+                                1.1,
+                                0.2
+                            ],
+                            "options": "00: 正常; 01: 超时; 10: 不可信状态"
+                        },
+                        {
+                            "bytes/bit": [
+                                1.3,
+                                0.2
+                            ],
+                            "options": "00: 正常; 01: 超时; 10: 不可信状态"
+                        },
+                        {
+                            "bytes/bit": [
+                                2.1,
+                                0.2
+                            ],
+                            "options": "00: 正常; 01: 超时; 10: 不可信状态"
+                        },
+                        {
+                            "bytes/bit": [
+                                2.3,
+                                0.2
+                            ],
+                            "options": "00: 正常; 01: 超时; 10: 不可信状态"
+                        },
+                        {
+                            "bytes/bit": [
+                                3.1,
+                                0.2
+                            ],
+                            "options": "00: 正常; 01: 超时; 10: 不可信状态"
+                        },
+                        {
+                            "bytes/bit": [
+                                3.3,
+                                0.2
+                            ],
+                            "options": "00: 正常; 01: 超时; 10: 不可信状态"
+                        },
+                        {
+                            "bytes/bit": [
+                                4.1,
+                                0.2
+                            ],
+                            "options": "00: 正常; 01: 超时; 10: 不可信状态"
+                        },
+                        {
+                            "bytes/bit": [
+                                4.3,
+                                0.6
+                            ],
+                            "type": "int"
+                        }
+                    ],
+                    "schema": [
+                        1,
+                        "接收CRM-BMS不能辨识的充电机辨识报文超时: ~, 接收CRM-BMS不能辨识的充电机辨识报文超时: ~, 接收充电机的时间同步和充电机最大输出能力报文超时: ~, 接收充电机完成充电准备报文超时: ~, 接收充电机充电状态报文超时: ~, 接收充电机中止充电报文超时: ~, 接收充电机充电统计报文超时：~"
+                    ]
+                }
+            }
+        },
+        "CEM": {
+            "describe": "充电机错误报文",
+            "PGN": "0x1F00",
+            "priority": 2,
+            "total_bytes": 4,
+            "receive_send": "0xf456",
+            "optional_count": 1,
+            "data": {
+                "BMS错误报文": {
+                    "bytes/bit": [
+                        1,
+                        4
+                    ],
+                    "components": [
+                        {
+                            "bytes/bit": [
+                                1.1,
+                                0.2
+                            ],
+                            "options": "00: 正常; 01: 超时; 10: 不可信状态"
+                        },
+                        {
+                            "bytes/bit": [
+                                1.3,
+                                0.2
+                            ],
+                            "options": "00: 正常; 01: 超时; 10: 不可信状态"
+                        },
+                        {
+                            "bytes/bit": [
+                                2.1,
+                                0.2
+                            ],
+                            "options": "00: 正常; 01: 超时; 10: 不可信状态"
+                        },
+                        {
+                            "bytes/bit": [
+                                2.3,
+                                0.2
+                            ],
+                            "options": "00: 正常; 01: 超时; 10: 不可信状态"
+                        },
+                        {
+                            "bytes/bit": [
+                                3.1,
+                                0.2
+                            ],
+                            "options": "00: 正常; 01: 超时; 10: 不可信状态"
+                        },
+                        {
+                            "bytes/bit": [
+                                3.3,
+                                0.2
+                            ],
+                            "options": "00: 正常; 01: 超时; 10: 不可信状态"
+                        },
+                        {
+                            "bytes/bit": [
+                                4.1,
+                                0.2
+                            ],
+                            "options": "00: 正常; 01: 超时; 10: 不可信状态"
+                        },
+                        {
+                            "bytes/bit": [
+                                4.3,
+                                0.6
+                            ],
+                            "type": "int"
+                        }
+                    ],
+                    "schema": [
+                        1,
+                        "接收BMS和车辆的辨识报文超时: ~, 接收电池充电参数报文超时: ~, 接收BMS完成充电准备报文超时: ~, 接收电池充电总状态报文超时: ~, 接收电池充电要求报文超时: ~, 接收BMS中止充电报文超时: ~, 接收BMS充电统计报文超时~, 其他: ~"
+                    ]
+                }
+            }
+        }
+    },
+    "特来电-车企大电流": 
+    {
+        "CHM": {
+            "describe": "充电机握手",
+            "PGN": "0x2600",
+            "priority": 6,
+            "total_bytes": 3,
+            "receive_send": "0xf456",
+            "optional_count": 0,
+            "data": {
+                "BMS协议版本": {
+                    "bytes/bit": [
+                        1,
+                        3
+                    ],
+                    "options": "534331: SC1; 101: V1.1"
+                }
+            }
+        },
+        "BHM": {
+            "describe": "车辆握手",
+            "PGN": "0x2700",
+            "priority": 6,
+            "total_bytes": 2,
+            "receive_send": "0x56f4",
+            "optional_count": 0,
+            "data": {
+                "最高允许充电总电压": {
+                    "bytes/bit": [
+                        1,
+                        2
+                    ],
+                    "ratio": 0.1,
+                    "offset": 0,
+                    "unit_symbol": "V"
+                }
+            }
+        },
+        "CRM": {
+            "describe": "充电机辨识",
+            "PGN": "0x0100",
+            "priority": 6,
+            "total_bytes": 8,
+            "receive_send": "0xf456",
+            "optional_count": 1,
+            "data": {
+                "CRM-辨识结果": {
+                    "bytes/bit": [
+                        1,
+                        1
+                    ],
+                    "options": "00: BMS不能辨识; AA: BMS能辨识"
+                },
+                "充电机编号": {
+                    "bytes/bit": [
+                        2,
+                        4
+                    ],
+                    "type": "ascii"
+                },
+                "充电机所在区域编码": {
+                    "bytes/bit": [
+                        6,
+                        3
+                    ],
+                    "type": "ascii"
+                }
+            }
+        },
+        "BRM": {
+            "describe": "BMS和车辆辨识报文",
+            "PGN": "0x0200",
+            "priority": 7,
+            "total_bytes": 41,
+            "receive_send": "0x56f4",
+            "optional_count": 10,
+            "data": {
+                "BMS协议版本": {
+                    "bytes/bit": [
+                        1,
+                        3
+                    ],
+                    "options": "534331: SC1; 101: V1.1"
+                },
+                "电池类型": {
+                    "bytes/bit": [
+                        4,
+                        1
+                    ],
+                    "options": "01: 铅酸电池; 02: 镍氢电池; 03: 磷酸铁锂电池; 04: 锰酸锂电池; 05: 钴酸锂电池; 06: 三元材料电池; 07: 聚合物锂离子电池; 08: 钛酸锂电池; ff: 其他电池"
+                },
+                "整车动力蓄电池系统额定容量/Ah": {
+                    "bytes/bit": [
+                        5,
+                        2
+                    ],
+                    "ratio": 0.1,
+                    "offset": 0,
+                    "unit_symbol": "Ah"
+                },
+                "整车动力蓄电池系统额定总电压/V": {
+                    "bytes/bit": [
+                        7,
+                        2
+                    ],
+                    "ratio": 0.1,
+                    "offset": 0,
+                    "unit_symbol": "V"
+                },
+                "电池生产厂商名称": {
+                    "bytes/bit": [
+                        9,
+                        4
+                    ],
+                    "type": "ascii"
+                },
+                "电池组序号": {
+                    "bytes/bit": [
+                        13,
+                        4
+                    ],
+                    "type": "ascii"
+                },
+                "电池组生产日期": {
+                    "bytes/bit": [
+                        17,
+                        3
+                    ],
+                    "components": [
+                        {
+                            "bytes/bit": [
+                                17,
+                                1
+                            ],
+                            "ratio": 1,
+                            "offset": 1985,
+                            "unit_symbol": ""
+                        },
+                        {
+                            "bytes/bit": [
+                                18,
+                                1
+                            ],
+                            "ratio": 1,
+                            "offset": 0,
+                            "unit_symbol": ""
+                        },
+                        {
+                            "bytes/bit": [
+                                19,
+                                1
+                            ],
+                            "ratio": 1,
+                            "offset": 0,
+                            "unit_symbol": ""
+                        }
+                    ],
+                    "schema": [
+                        1,
+                        "~年~月~日"
+                    ]
+                },
+                "电池组充电次数": {
+                    "bytes/bit": [
+                        20,
+                        3
+                    ],
+                    "ratio": 1,
+                    "offset": 0,
+                    "unit_symbol": "次"
+                },
+                "电池组产权标识": {
+                    "bytes/bit": [
+                        23,
+                        1
+                    ],
+                    "options": "0: 租赁; 1: 车自有"
+                },
+                "预留": {
+                    "bytes/bit": [
+                        24,
+                        1
+                    ],
+                    "options": "EE: 特来电-车企统一大电流"
+                },
+                "车辆识别码(VIN)": {
+                    "bytes/bit": [
+                        25,
+                        17
+                    ],
+                    "type": "ascii"
+                },
+                "BMS软件版本": {
+                    "bytes/bit": [
+                        42,
+                        8
+                    ],
+                    "components": [
+                        {
+                            "bytes/bit": [
+                                43,
+                                1
+                            ],
+                            "type": "int"
+                        },
+                        {
+                            "bytes/bit": [
+                                44,
+                                1
+                            ],
+                            "type": "int"
+                        },
+                        {
+                            "bytes/bit": [
+                                45,
+                                1
+                            ],
+                            "type": "int"
+                        },
+                        {
+                            "bytes/bit": [
+                                46,
+                                2
+                            ],
+                            "type": "int"
+                        }
+                    ],
+                    "schema": [
+                        -1,
+                        "BMS当前使用~年~月~日第~次编译版本"
+                    ]
+                }
+            }
+        },
+        "BCP": {
+            "describe": "动力蓄电池充电参数",
+            "PGN": "0x0600",
+            "priority": 7,
+            "total_bytes": 13,
+            "receive_send": "0x56f4",
+            "optional_count": 0,
+            "data": {
+                "单体动力蓄电池最高允许充电电压": {
+                    "bytes/bit": [
+                        1,
+                        2
+                    ],
+                    "ratio": 0.01,
+                    "offset": 0,
+                    "unit_symbol": "V"
+                },
+                "最高允许充电电流": {
+                    "bytes/bit": [
+                        3,
+                        2
+                    ],
+                    "ratio": 0.1,
+                    "offset": 0,
+                    "unit_symbol": "A"
+                },
+                "动力蓄电池标称总能量": {
+                    "bytes/bit": [
+                        5,
+                        2
+                    ],
+                    "ratio": 0.1,
+                    "offset": 0,
+                    "unit_symbol": "KW*h"
+                },
+                "最高允许充电总电压": {
+                    "bytes/bit": [
+                        7,
+                        2
+                    ],
+                    "ratio": 0.1,
+                    "offset": 0,
+                    "unit_symbol": "V"
+                },
+                "最高允许温度": {
+                    "bytes/bit": [
+                        9,
+                        1
+                    ],
+                    "ratio": 1,
+                    "offset": -50,
+                    "unit_symbol": "℃"
+                },
+                "整车动力蓄电池荷电状态(SOC)": {
+                    "bytes/bit": [
+                        10,
+                        2
+                    ],
+                    "ratio": 0.1,
+                    "offset": 0,
+                    "unit_symbol": "%"
+                },
+                "整车动力蓄电池当前电池电压": {
+                    "bytes/bit": [
+                        12,
+                        2
+                    ],
+                    "ratio": 0.1,
+                    "offset": 0,
+                    "unit_symbol": "V"
+                }
+            }
+        },
+        "CTS": {
+            "describe": "充电机发送时间同步信息",
+            "PGN": "0x0700",
+            "priority": 6,
+            "total_bytes": 7,
+            "receive_send": "0xf456",
+            "optional_count": 1,
+            "data": {
+                "同步时间": {
+                    "bytes/bit": [
+                        1,
+                        7
+                    ],
+                    "components": [
+                        {
+                            "bytes/bit": [
+                                1,
+                                1
+                            ],
+                            "type": "BCD"
+                        },
+                        {
+                            "bytes/bit": [
+                                2,
+                                1
+                            ],
+                            "type": "BCD"
+                        },
+                        {
+                            "bytes/bit": [
+                                3,
+                                1
+                            ],
+                            "type": "BCD"
+                        },
+                        {
+                            "bytes/bit": [
+                                4,
+                                1
+                            ],
+                            "type": "BCD"
+                        },
+                        {
+                            "bytes/bit": [
+                                5,
+                                1
+                            ],
+                            "type": "BCD"
+                        },
+                        {
+                            "bytes/bit": [
+                                6,
+                                2
+                            ],
+                            "type": "int"
+                        }
+                    ],
+                    "schema": [
+                        -1,
+                        "~年~月~日~时~分~秒"
+                    ]
+                }
+            }
+        },
+        "CML": {
+            "describe": "充电机最大输出能力",
+            "PGN": "0x0800",
+            "priority": 6,
+            "total_bytes": 8,
+            "receive_send": "0xf456",
+            "optional_count": 0,
+            "data": {
+                "最高输出电压(V)": {
+                    "bytes/bit": [
+                        1,
+                        2
+                    ],
+                    "ratio": 0.1,
+                    "offset": 0,
+                    "unit_symbol": "V"
+                },
+                "最低输出电压(V)": {
+                    "bytes/bit": [
+                        3,
+                        2
+                    ],
+                    "ratio": 0.1,
+                    "offset": 0,
+                    "unit_symbol": "V"
+                },
+                "最高输出电流(A)": {
+                    "bytes/bit": [
+                        5,
+                        2
+                    ],
+                    "ratio": 0.1,
+                    "offset": 0,
+                    "unit_symbol": "A"
+                },
+                "最低输出电流(A)": {
+                    "bytes/bit": [
+                        7,
+                        2
+                    ],
+                    "ratio": 0.1,
+                    "offset": 0,
+                    "unit_symbol": "A"
+                }
+            }
+        },
+        "BRO": {
+            "describe": "电池充电准备就绪状态",
+            "PGN": "0x0900",
+            "priority": 4,
+            "total_bytes": 1,
+            "receive_send": "0x56f4",
+            "optional_count": 0,
+            "data": {
+                "BMS是否充电准备好": {
+                    "bytes/bit": [
+                        1,
+                        1
+                    ],
+                    "options": "00: BMS未做好充电准备; AA: BMS完成充电准备; FF: 无效"
+                }
+            }
+        },
+        "CRO": {
+            "describe": "充电机输出准备就绪状态",
+            "PGN": "0x0A00",
+            "priority": 4,
+            "total_bytes": 1,
+            "receive_send": "0xf456",
+            "optional_count": 0,
+            "data": {
+                "充电机是否准备好": {
+                    "bytes/bit": [
+                        1,
+                        1
+                    ],
+                    "options": "00: 充电机未做好充电准备; AA: 充电机完成充电准备; FF: 无效"
+                }
+            }
+        },
+        "BCL": {
+            "describe": "电池充电需求",
+            "PGN": "0x1000",
+            "priority": 6,
+            "total_bytes": 5,
+            "receive_send": "0x56f4",
+            "optional_count": 0,
+            "data": {
+                "电压需求(V)": {
+                    "bytes/bit": [
+                        1,
+                        2
+                    ],
+                    "ratio": 0.1,
+                    "offset": 0,
+                    "unit_symbol": "V"
+                },
+                "电流需求(A)": {
+                    "bytes/bit": [
+                        3,
+                        2
+                    ],
+                    "ratio": 0.1,
+                    "offset": 0,
+                    "unit_symbol": "A"
+                },
+                "充电模式": {
+                    "bytes/bit": [
+                        5,
+                        1
+                    ],
+                    "options": "01: 恒压充电; 02: 恒流充电"
+                }
+            }
+        },
+        "BCS": {
+            "describe": "电池充电总状态",
+            "PGN": "0x1100",
+            "priority": 7,
+            "total_bytes": 9,
+            "receive_send": "0x56f4",
+            "optional_count": 0,
+            "data": {
+                "充电电压测量值": {
+                    "bytes/bit": [
+                        1,
+                        2
+                    ],
+                    "ratio": 0.1,
+                    "offset": 0,
+                    "unit_symbol": "V"
+                },
+                "充电电流测量值": {
+                    "bytes/bit": [
+                        3,
+                        2
+                    ],
+                    "ratio": 0.1,
+                    "offset": 0,
+                    "unit_symbol": "A"
+                },
+                "最高单体动力蓄电池电压及其组号": {
+                    "bytes/bit": [
+                        5,
+                        2
+                    ],
+                    "components": [
+                        {
+                            "bytes/bit": [
+                                5.1,
+                                1.4
+                            ],
+                            "ratio": 0.01,
+                            "offset": 0,
+                            "unit_symbol": "V"
+                        },
+                        {
+                            "bytes/bit": [
+                                6.5,
+                                0.4
+                            ],
+                            "ratio": 1,
+                            "offset": 0,
+                            "unit_symbol": ""
+                        }
+                    ],
+                    "schema": [
+                        1,
+                        "~ 组号~"
+                    ]
+                },
+                "当前荷电状态SOC(%)": {
+                    "bytes/bit": [
+                        7,
+                        1
+                    ],
+                    "ratio": 1,
+                    "offset": 0,
+                    "unit_symbol": "%"
+                },
+                "估算剩余充电时间": {
+                    "bytes/bit": [
+                        8,
+                        2
+                    ],
+                    "ratio": 1,
+                    "offset": 0,
+                    "unit_symbol": "min"
+                }
+            }
+        },
+        "CCS": {
+            "describe": "充电机充电状态",
+            "PGN": "0x1200",
+            "priority": 6,
+            "total_bytes": 7,
+            "receive_send": "0xf456",
+            "optional_count": 0,
+            "data": {
+                "电压输出值": {
+                    "bytes/bit": [
+                        1,
+                        2
+                    ],
+                    "ratio": 0.1,
+                    "offset": 0,
+                    "unit_symbol": "V"
+                },
+                "电流输出值": {
+                    "bytes/bit": [
+                        3,
+                        2
+                    ],
+                    "ratio": 0.1,
+                    "offset": 0,
                     "unit_symbol": "A"
                 },
                 "累计充电时间": {

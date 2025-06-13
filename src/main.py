@@ -198,7 +198,10 @@ def bytes_translation(json_dic:dict, format_dic:dict, key:str, byte:int, index:i
     # 比率 偏移量 计算 翻译       
     elif 'ratio' in json_dic.keys():
         try:
-            values = Decimal(str(byte)) * Decimal(str(json_dic['ratio'])) + Decimal(str(json_dic['offset']))
+            if Decimal(str(json_dic['offset'])) < 0 and "电流" in key:
+                values = abs(Decimal(str(json_dic['offset']))) - Decimal(str(byte)) * Decimal(str(json_dic['ratio']))
+            else:
+                values = Decimal(str(byte)) * Decimal(str(json_dic['ratio'])) + Decimal(str(json_dic['offset']))
         except Exception:
             return f"{key}: 解析错误"
         if key:
@@ -320,11 +323,14 @@ def bit_translation(json_dic:dict, key:str, byte:int, bit_Lenthg:int, range_list
         else:
             return f"bit解析错误-{key}options, bit_Lenthg:{bit_Lenthg}-byte:{byte}-range_list:{range_list}-{bit_int}-items{json_dic['options']}; "
     elif 'ratio' in json_dic.keys():
-        values = Decimal(str(bit_int)) * Decimal(str(json_dic['ratio'])) + Decimal(str(json_dic['offset']))
-        if key:
-            text += f"{key}: {values}{json_dic['unit_symbol']}; "
-        else: 
-            return f"{values}{json_dic['unit_symbol']}"
+            if Decimal(str(json_dic['offset'])) < 0 and "电流" in key:
+                values = abs(Decimal(str(json_dic['offset']))) - Decimal(str(bit_int)) * Decimal(str(json_dic['ratio']))
+            else:
+                values = Decimal(str(bit_int)) * Decimal(str(json_dic['ratio'])) + Decimal(str(json_dic['offset']))
+            if key:
+                text += f"{key}: {values}{json_dic['unit_symbol']}; "
+            else:
+                return f"{values}{json_dic['unit_symbol']}"
     elif "type" in json_dic.keys():
         if json_dic['type'] == "int":
             if key:
@@ -761,7 +767,6 @@ def main_prase(csv_df:list, id_place:int, data_place:int, bmsConfig:dict):
     global data_js
 
     data_js = bmsConfig
-    bms_check(data_js) # type: ignore
 
     csv_df = set_msg_name(csv_df, id_place, data_place)  # 获取名称列
     csv_df = set_meaning(csv_df, id_place, data_place)   # 获取翻译列

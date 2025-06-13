@@ -78,6 +78,6 @@ def read_json(path = 'bmsConfig.json'):
 
 if __name__ == "__main__":
     global json_data
-    json_data = read_json('./src/bmsConfig.json')
+    json_data = read_json('./config/bmsConfig.json')
     # csv_df = get_csv_data('./data/BVIN1枪.CSV')
     bms_check(json_data)
