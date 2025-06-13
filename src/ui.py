@@ -152,17 +152,22 @@ def creat_csv(path, data_df, splite_s):
             writer.writerow(row)
     os.startfile(os.path.join(file_path, csv_name))  # 自动使用系统默认应用打开该文件
 
-def check_data(data):
-    try:
-        if len(data) < 2:
-            showerror('错误', '请选择正确的分隔符')
-        elif len(data[int(letter_to_number(id_place.get()))-1]) < 8:
-            showerror('错误', '请选择正确的帧ID列')   
-        elif len(data[int(letter_to_number(data_place.get()))-1]) < 2:
-            showerror('错误', '请选择正确的帧数据列')
-    except Exception as e:
-        print(e)
-        showerror('错误', '解析失败，请选择正确的列')
+def check_data(data) -> bool:
+    if len(data) < 2:
+        showerror('错误', '请选择正确的分隔符')
+        return False
+    id_idx = int(letter_to_number(id_place.get())) - 1
+    if id_idx >= len(data) or len(data[id_idx]) < 8:
+        showerror('错误', '请选择正确的帧ID列')
+        return False
+    
+    data_idx = int(letter_to_number(data_place.get())) - 1
+    if data_idx >= len(data) or len(data[data_idx]) < 2:
+        showerror('错误', '请选择正确的帧数据列')
+        return False
+    else:
+        return True
+
 
 def parse_asc_file(asc_file) -> list:
     regex_pattern = r"^(\d+\.\d+).*?(\w+f456|\w+56f4).*?d\s(\d+)\s(.*?)$"
@@ -230,16 +235,17 @@ def parse_file():
                 print(e)
                 showwarning('警告', f'请先关闭 {os.path.split(file_path)[1]} 文件，我才能工作')
                 return
-            # check_data(df_data[3])
-            df_data = main_prase(df_data, id_index, data_p, bms_type)
-            try:
-                creat_csv(file_path, df_data, split_s)
-            except Exception as e:
-                print(e)
-                # 生成新的文件 保存解析后的数据
-                csv_name = ''.join(os.path.split(file_path)[1].split(
-                    '.')[:-1]) + '-译.' + os.path.split(file_path)[1].split('.')[-1]
-                showwarning('警告', f'请先关闭 {csv_name} 文件')
+            if check_data(df_data[3]):
+                df_data = main_prase(df_data, id_index, data_p, bms_type)
+                try:
+                    creat_csv(file_path, df_data, split_s)
+                except Exception as e:
+                    print(e)
+                    # 生成新的文件 保存解析后的数据
+                    csv_name = ''.join(os.path.split(file_path)[1].split(
+                        '.')[:-1]) + '-译.' + os.path.split(file_path)[1].split('.')[-1]
+                    showwarning('警告', f'请先关闭 {csv_name} 文件')
+                
     parse_btn.config(state='normal')
 
 
