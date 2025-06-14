@@ -4,7 +4,7 @@ from tkinter import Tk, StringVar, IntVar, Label, Entry, Button, END
 from tkinter.ttk import Combobox
 from tkinter.filedialog import askopenfilename
 from tkinter.messagebox import showwarning, showerror
-from main import read_config, main_prase
+from main import read_bms_config, main_prase
 from utils import get_text_encoding
 import json
 import re
@@ -121,7 +121,7 @@ def ui_path_check(path):
 
 def open_file_manager():
     global file_path
-    file_path = askopenfilename()
+    file_path = askopenfilename(filetypes=[("支持的文件", "*.csv *.xls *.xlsx *.asc"), ("所有文件", "*.*")])
     file_path_entry.delete(0, END)
     file_path_entry.insert(0, file_path)
 
@@ -181,6 +181,9 @@ def creat_excel(path, data_df):
     
     workbook = openpyxl.Workbook()
     sheet = workbook.active
+    if sheet is None:
+        showerror('错误', 'Excel文件没有活动工作表或文件为空。')
+        return
     
     for row_data in data_df:
         sheet.append(row_data)
@@ -233,73 +236,74 @@ def parse_asc_file(asc_file) -> list:
 
 def parse_file():
     parse_btn.config(state='disabled')
-    save_config()
-    id_index  : int  = letter_to_number(id_place.get())
-    data_p   : int  = letter_to_number(data_place.get())
-    split_s  : str  = split_entry.get()
-    valid_s  : int  = valid_entry.get()
-    bms_type : dict = copy.deepcopy(bms_config_backup[protocols_entry.get()]) # type: ignore
-    print(
-        [id_index       ,
-        data_p   ,
-        split_s  ,
-        valid_s]
-    )
-    if id_index == '':
-        showwarning('警告', '请给出帧ID的')
-    elif id_index == -1:
-        showwarning('警告', '请给出正确的帧ID位置')
-    elif data_p == '':
-        showwarning('警告', '请给出帧数据的位置')
-    elif data_p == -1:
-        showwarning('警告', '请给出正确的帧数据位置')
-    elif id_index == data_p:
-        showerror('错误', '帧ID和帧数据列数相同')
-    elif split_s == '':
-        showwarning('警告', "请选择数据分隔符")
-    elif valid_s == '':
-        showwarning('警告', "请选择有效数据从哪行开始")
-    else:
-        if ui_path_check(file_path):
-            print('正在解析')
-            if split_s[0] == 't':
-                split_s = '\t'
-            elif '英文逗号' in split_s:
-                split_s = ','
-            elif '分号' in split_s:
-                split_s = ';'
-            elif '竖线' in split_s:
-                split_s = '|'
-            try:
-                file_extension = os.path.splitext(file_path)[1].lower()
-                if file_extension == '.asc':
-                    df_data = parse_asc_file(file_path)
-                    id_index = 2
-                    data_p = 4
-                elif file_extension in ['.xls', '.xlsx']:
-                    df_data = read_excel(file_path, int(valid_s))
-                else:
-                    df_data = read_csv(file_path, split_s, int(valid_s))
-            except Exception as e:
-                print(e)
-                showwarning('警告', f'请先关闭 {os.path.split(file_path)[1]} 文件，我才能工作')
-                return
-            if check_data(df_data[3], id_index, data_p):
-                df_data = main_prase(df_data, id_index, data_p, bms_type)
-                output_file_extension = os.path.splitext(file_path)[1].lower()
-                output_base_name = os.path.splitext(os.path.split(file_path)[1])[0]
-                output_file_name = f"{output_base_name}-译{output_file_extension}"
-
+    try:
+        save_config()
+        id_index  : int  = letter_to_number(id_place.get())
+        data_p   : int  = letter_to_number(data_place.get())
+        split_s  : str  = split_entry.get()
+        valid_s  : int  = valid_entry.get()
+        bms_type : dict = copy.deepcopy(bms_config_backup[protocols_entry.get()]) # type: ignore
+        print(
+            [id_index       ,
+            data_p   ,
+            split_s  ,
+            valid_s]
+        )
+        if id_index == '':
+            showwarning('警告', '请给出帧ID的')
+        elif id_index == -1:
+            showwarning('警告', '请给出正确的帧ID位置')
+        elif data_p == '':
+            showwarning('警告', '请给出帧数据的位置')
+        elif data_p == -1:
+            showwarning('警告', '请给出正确的帧数据位置')
+        elif id_index == data_p:
+            showerror('错误', '帧ID和帧数据列数相同')
+        elif split_s == '':
+            showwarning('警告', "请选择数据分隔符")
+        elif valid_s == '':
+            showwarning('警告', "请选择有效数据从哪行开始")
+        else:
+            if ui_path_check(file_path):
+                print('正在解析')
+                if split_s[0] == 't':
+                    split_s = '\t'
+                elif '英文逗号' in split_s:
+                    split_s = ','
+                elif '分号' in split_s:
+                    split_s = ';'
+                elif '竖线' in split_s:
+                    split_s = '|'
                 try:
-                    if output_file_extension in ['.xls', '.xlsx']:
-                        creat_excel(file_path, df_data)
+                    file_extension = os.path.splitext(file_path)[1].lower()
+                    if file_extension == '.asc':
+                        df_data = parse_asc_file(file_path)
+                        id_index = 2
+                        data_p = 4
+                    elif file_extension in ['.xls', '.xlsx']:
+                        df_data = read_excel(file_path, int(valid_s))
                     else:
-                        creat_csv(file_path, df_data, split_s)
+                        df_data = read_csv(file_path, split_s, int(valid_s))
                 except Exception as e:
                     print(e)
-                    showwarning('警告', f'请先关闭 {output_file_name} 文件')
-                
-    parse_btn.config(state='normal')
+                    showwarning('警告', f'请先关闭 {os.path.split(file_path)[1]} 文件，我才能工作')
+                    return
+                if check_data(df_data[3], id_index, data_p):
+                    df_data = main_prase(df_data, id_index, data_p, bms_type)
+                    output_file_extension = os.path.splitext(file_path)[1].lower()
+                    output_base_name = os.path.splitext(os.path.split(file_path)[1])[0]
+                    output_file_name = f"{output_base_name}-译{output_file_extension}"
+
+                    try:
+                        if output_file_extension in ['.xls', '.xlsx']:
+                            creat_excel(file_path, df_data)
+                        else:
+                            creat_csv(file_path, df_data, split_s)
+                    except Exception as e:
+                        print(e)
+                        showwarning('警告', f'请先关闭 {output_file_name} 文件')
+    finally:
+        parse_btn.config(state='normal')
 
 
 def creat_btn():
@@ -372,7 +376,7 @@ if __name__ == "__main__":
     not_config_path()
     if os.path.exists('./config/bms.ico'):
         root.iconbitmap('./config/bms.ico')
-    bms_config = read_config('./config/bmsConfig.yaml') # type: ignore
+    bms_config = read_bms_config('./config/bmsConfig.yaml') # type: ignore
     bms_config_backup = bms_config.copy()
     config = read_config('./config/config')
     win_width, win_height = creat_window()
@@ -381,6 +385,6 @@ if __name__ == "__main__":
     set_config(config)
     creat_btn()
     
-    bms_config = read_config('./config/bmsConfig.yaml') # type: ignore
+    bms_config = read_bms_config('./config/bmsConfig.yaml') # type: ignore
     root.mainloop()
  

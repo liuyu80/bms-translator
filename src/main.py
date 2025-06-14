@@ -61,7 +61,7 @@ csv_header = []
  param {*} path 文件路径
  return {*} dict类型
 '''
-def read_config(path = 'config/bmsConfig.yaml'): # 修改函数名和默认路径
+def read_bms_config(path = 'config/bmsConfig.yaml'): # 修改函数名和默认路径
     if os.path.exists(path):
         with open(path, "r", encoding='utf-8') as fp:
             try:
