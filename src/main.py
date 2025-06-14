@@ -6,14 +6,15 @@
  Version      : 1.0
  Author       : liuyu 2543722345@qq.com
  Date         : 2023-02-09 09:17:00
- LastEditors  : liuyu 2543722345@qq.com
- LastEditTime : 2023-09-13 23:00:03
+ LastEditors  : liuyu
+ LastEditTime : 2025-06-14 19:43:53
  FilePath     : \\bms-translator\\src\\main.py
  Copyright (C) 2023 by liuyu. All rights reserved.
 '''
 
 from decimal import Decimal
 import json
+import yaml # 导入yaml模块
 import os
 import re
 import math
@@ -56,14 +57,24 @@ global data_js
 csv_header = []
 
 '''
- description: 读取json配置文件
+ description: 读取配置文件 (支持JSON和YAML)
  param {*} path 文件路径
  return {*} dict类型
 '''
-def read_json(path = 'bmsConfig·.json'):
+def read_config(path = 'config/bmsConfig.yaml'): # 修改函数名和默认路径
     if os.path.exists(path):
         with open(path, "r", encoding='utf-8') as fp:
-            data = json.load(fp)
+            try:
+                if path.endswith('.json'):
+                    data = json.load(fp)
+                elif path.endswith('.yaml') or path.endswith('.yml'):
+                    data = yaml.safe_load(fp) # 使用yaml.safe_load读取YAML文件
+                else:
+                    messagebox.showerror('错误', '不支持的文件格式，请使用.json或.yaml/.yml文件')
+                    return {}
+            except Exception as e:
+                messagebox.showerror('错误', f'配置文件解析失败: {e}')
+                return {}
         return (data)
     else:
         messagebox.showerror('错误', '没有BMS配置文件, 下载配置文件请访问\nhttps://gitee.com/liuyu-git/bms-translator')

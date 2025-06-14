@@ -4,7 +4,7 @@ from tkinter import Tk, StringVar, IntVar, Label, Entry, Button, END
 from tkinter.ttk import Combobox
 from tkinter.filedialog import askopenfilename
 from tkinter.messagebox import showwarning, showerror
-from main import read_json, main_prase
+from main import read_config, main_prase
 from utils import get_text_encoding
 import json
 import re
@@ -319,7 +319,7 @@ if __name__ == "__main__":
     not_config_path()
     if os.path.exists('./config/bms.ico'):
         root.iconbitmap('./config/bms.ico')
-    bms_config = read_json('./config/bmsConfig.json') # type: ignore
+    bms_config = read_config('./config/bmsConfig.yaml') # type: ignore
     bms_config_backup = bms_config.copy()
     config = read_config('./config/config')
     win_width, win_height = creat_window()
@@ -328,6 +328,6 @@ if __name__ == "__main__":
     set_config(config)
     creat_btn()
     
-    bms_config = read_json('./config/bmsConfig.json') # type: ignore
+    bms_config = read_config('./config/bmsConfig.yaml') # type: ignore
     root.mainloop()
  
