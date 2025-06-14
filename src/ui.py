@@ -12,6 +12,7 @@ import os
 import time
 import csv
 import copy
+import openpyxl
 
 
 
@@ -138,12 +139,33 @@ def read_csv(path, split_s, valid_num):
 
     return data[valid_num-1:]
 
+def read_excel(path, valid_num):
+    try:
+        workbook = openpyxl.load_workbook(path)
+        sheet = workbook.active
+        if sheet is None:
+            showerror('错误', 'Excel文件没有活动工作表或文件为空。')
+            return []
+        data = []
+        for row in sheet.iter_rows():
+            row_data = [cell.value for cell in row]
+            data.append(row_data)
+        
+        global unvalid_header
+        for line in data[: valid_num-1]:
+            unvalid_header.append([line])
+        unvalid_header.append([''])
+        
+        return data[valid_num-1:]
+    except Exception as e:
+        showerror('错误', f'读取Excel文件失败: {e}')
+        return []
 
 def creat_csv(path, data_df, splite_s):
     file_path, file_name = os.path.split(path)  # 路径切割, 得到路径和文件名
     # 生成新的文件 保存解析后的数据
-    csv_name = ''.join(file_name.split(
-        '.')[:-1]) + '-译.' + file_name.split('.')[-1]
+    base_name = os.path.splitext(file_name)[0]
+    csv_name = f"{base_name}-译.csv"
     with open(os.path.join(file_path, csv_name), 'w', newline='', encoding='utf-8') as file:
         # 使用制表符作为分隔符创建 CSV 的 writer 对象
         writer = csv.writer(file, delimiter=splite_s)
@@ -152,21 +174,46 @@ def creat_csv(path, data_df, splite_s):
             writer.writerow(row)
     os.startfile(os.path.join(file_path, csv_name))  # 自动使用系统默认应用打开该文件
 
+def creat_excel(path, data_df):
+    file_path, file_name = os.path.split(path)
+    base_name = os.path.splitext(file_name)[0]
+    excel_name = f"{base_name}-译.xlsx"
+    
+    workbook = openpyxl.Workbook()
+    sheet = workbook.active
+    
+    for row_data in data_df:
+        sheet.append(row_data)
+        
+    output_path = os.path.join(file_path, excel_name)
+    try:
+        workbook.save(output_path)
+        os.startfile(output_path)
+    except Exception as e:
+        showerror('错误', f'保存Excel文件失败: {e}')
+
 def check_data(data: list, idx: int , datax: int) -> bool:
-    if len(data) < 2:
-        showerror('错误', '请选择正确的分隔符')
+    if not data or len(data) < 2: # Handle empty or too small data
+        showerror('错误', '文件数据为空或数据量不足，请检查文件内容或分隔符')
         return False
+    
     id_idx = idx - 1
-    if id_idx >= len(data) or len(data[id_idx]) < 8:
-        showerror('错误', '请选择正确的帧ID列')
+    if id_idx < 0 or id_idx >= len(data):
+        showerror('错误', '帧ID列超出数据范围，请选择正确的帧ID列')
+        return False
+    if not data[id_idx] or len(data[id_idx]) < 8:
+        showerror('错误', '帧ID列数据格式不正确或长度不足，请选择正确的帧ID列')
         return False
     
     data_idx = datax - 1
-    if data_idx >= len(data) or len(data[data_idx]) < 2:
-        showerror('错误', '请选择正确的帧数据列')
+    if data_idx < 0 or data_idx >= len(data):
+        showerror('错误', '帧数据列超出数据范围，请选择正确的帧数据列')
         return False
-    else:
-        return True
+    if not data[data_idx] or len(data[data_idx]) < 2:
+        showerror('错误', '帧数据列数据格式不正确或长度不足，请选择正确的帧数据列')
+        return False
+    
+    return True
 
 
 def parse_asc_file(asc_file) -> list:
@@ -229,6 +276,8 @@ def parse_file():
                     df_data = parse_asc_file(file_path)
                     id_index = 2
                     data_p = 4
+                elif file_extension in ['.xls', '.xlsx']:
+                    df_data = read_excel(file_path, int(valid_s))
                 else:
                     df_data = read_csv(file_path, split_s, int(valid_s))
             except Exception as e:
@@ -237,14 +286,18 @@ def parse_file():
                 return
             if check_data(df_data[3], id_index, data_p):
                 df_data = main_prase(df_data, id_index, data_p, bms_type)
+                output_file_extension = os.path.splitext(file_path)[1].lower()
+                output_base_name = os.path.splitext(os.path.split(file_path)[1])[0]
+                output_file_name = f"{output_base_name}-译{output_file_extension}"
+
                 try:
-                    creat_csv(file_path, df_data, split_s)
+                    if output_file_extension in ['.xls', '.xlsx']:
+                        creat_excel(file_path, df_data)
+                    else:
+                        creat_csv(file_path, df_data, split_s)
                 except Exception as e:
                     print(e)
-                    # 生成新的文件 保存解析后的数据
-                    csv_name = ''.join(os.path.split(file_path)[1].split(
-                        '.')[:-1]) + '-译.' + os.path.split(file_path)[1].split('.')[-1]
-                    showwarning('警告', f'请先关闭 {csv_name} 文件')
+                    showwarning('警告', f'请先关闭 {output_file_name} 文件')
                 
     parse_btn.config(state='normal')
 
@@ -292,17 +345,17 @@ def set_config(config):
         valid_entry.set(2)
         protocols_entry.set("GB2015")
 
-def letter_to_number(line):
-    letter = line[0]
-    if letter in [str(x) for x in range(1, 24)]:
-        return int(letter)
-    if letter.isalpha():
-        ascii_value = ord(letter.lower())
-        if 97 <= ascii_value <= 122:  # 小写字母 a-z
-            return ascii_value - 96
-        elif 65 <= ascii_value <= 90:  # 大写字母 A-Z
-            return ascii_value - 64
-    return -1  # 如果输入不是字母和非0，返回 -1 或其他适当的值
+def letter_to_number(line: str):
+    try:
+        # 尝试直接将输入转换为整数，处理 "1", "2" 等情况
+        return int(line.split(' | ')[0])
+    except ValueError:
+        # 如果不是纯数字，则尝试按字母处理
+        letter = line[0]
+        if letter.isalpha():
+            # 将字母转换为对应的列数 (A=1, B=2, ...)
+            return ord(letter.upper()) - ord('A') + 1
+    return -1  # 如果输入不是有效的数字或字母，返回 -1
 
 
 def not_config_path():
