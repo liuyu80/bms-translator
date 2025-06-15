@@ -7,7 +7,7 @@
  Author       : liuyu 2543722345@qq.com
  Date         : 2023-02-09 09:17:00
  LastEditors  : liuyu
- LastEditTime : 2025-06-15 21:56:20
+ LastEditTime : 2025-06-15 22:14:03
  FilePath     : \\bms-translator\\src\\main.py
  Copyright (C) 2023 by liuyu. All rights reserved.
 '''
@@ -392,20 +392,30 @@ def translation_fun(json_dic:dict, format_dic:dict, data_keys:list, pack:list) -
  param {str} num: "bytes/bit"字段下的数值
  return {int} 位
 '''
-def hexToBit(num) -> int:
-    # 假设在 _preprocess_bms_config 中已经将 bytes/bit 转换为统一的位长度整数
-    # 如果 num 已经是整数，直接返回其值（表示位长度）
-    if isinstance(num, int):
-        return num
-    # 如果 num 是浮点数或字符串，表示字节.位，则进行转换
-    elif isinstance(num, float):
-        return int(num * 8) # 假设浮点数表示字节，例如 1.5 字节 = 12 位
-    elif isinstance(num, str):
-        if '.' in num:
-            parts = num.split('.')
-            return int(parts[0]) * 8 + int(parts[1])
+def hexToBit(num) -> int: # Removed type hint for num to allow flexibility
+    if isinstance(num, float) :
+        str_nums = str(num).split('.')
+        if len(str_nums[1]) != 1 or int(str_nums[1]) >= 8:
+            print('数据有问题！')
+            return 0
         else:
-            return int(num) * 8
+            return int(str_nums[0]) * 8 + int(str_nums[1])
+    elif isinstance(num, int):
+        return num * 8
+    elif isinstance(num, str): # Added check for string type
+        if '.' in num:
+            str_nums = str(num).split('.')
+            if len(str_nums[1]) != 1 or int(str_nums[1]) >= 8:
+                print('数据有问题！')
+                return 0
+            else:
+                return int(str_nums[0]) * 8 + int(str_nums[1])
+        else: # If it's a string without a decimal, try converting to int
+            try:
+                return int(num) * 8
+            except ValueError:
+                print('数据有问题！无法转换为整数。', num)
+                return 0
     return 0
 
 '''
