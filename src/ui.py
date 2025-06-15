@@ -418,11 +418,12 @@ def not_config_path():
 
 if __name__ == "__main__":
     # 获取当前脚本的绝对路径
-    current_script_path = os.path.abspath(sys.argv[0])
-    # 获取脚本所在的目录
-    current_script_dir = os.path.dirname(current_script_path)
-    # 更改当前工作目录到脚本所在的目录
-    os.chdir(current_script_dir)
+    if '.py' not in sys.argv[0]:
+        current_script_path = os.path.abspath(sys.argv[0])
+        # 获取脚本所在的目录
+        current_script_dir = os.path.dirname(current_script_path)
+        # 更改当前工作目录到脚本所在的目录
+        os.chdir(current_script_dir)
 
     bms_config = {}
     root = Tk()

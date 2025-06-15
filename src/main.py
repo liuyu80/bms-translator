@@ -7,7 +7,7 @@
  Author       : liuyu 2543722345@qq.com
  Date         : 2023-02-09 09:17:00
  LastEditors  : liuyu
- LastEditTime : 2025-06-14 19:43:53
+ LastEditTime : 2025-06-15 21:30:35
  FilePath     : \\bms-translator\\src\\main.py
  Copyright (C) 2023 by liuyu. All rights reserved.
 '''
@@ -661,19 +661,6 @@ def analysis_dataRaw(data:list):
             return f"{data[0]}不定长报文未解析"
         s_re =  one_frame_analysis(data_js[data[0]], data[0], data[1], data[2]) # type: ignore
         return s_re
-'''
- description: 给名称一列赋值
- param {*} df csv文件的数据
- return {*} 文件数据
-'''
-def set_msg_name(df, id_place, data_place):
-    data_place = int(data_place)
-    id_place = int(id_place)
-    for line in df:
-        # 名称, 帧ID, 数据长度, 数据(HEX)
-        name = param_msg_name(['', line[id_place-1], int(len(line[data_place-1].replace(' ', ''))), line[data_place-1]])
-        line.insert(id_place-1, name)
-    return df
 
 '''
  description: 在报文下生成format_list字段为之后生成 解析匹配字符串提供方便, 
@@ -705,6 +692,9 @@ def set_meaning(df, id_place, data_place):
                             options_to_dic(data_js[key_data]['data'][key]['components'][index]['options'], # type: ignore
                                 data_js[key_data]['data'][key]['components'][index]['bytes/bit'][1]) # type: ignore
     for line in df:
+        # 根据帧ID判断报文名字
+        name = param_msg_name(['', line[id_place-1], int(len(line[data_place-1].replace(' ', ''))), line[data_place-1]])
+        line.insert(id_place-1, name)
         # 名称, 数据长度, 数据(HEX)
         line.append(analysis_dataRaw([line[id_place-1], int(len(line[data_place].replace(' ', ''))), line[data_place]]))
     return df
@@ -779,7 +769,6 @@ def main_prase(csv_df:list, id_place:int, data_place:int, bmsConfig:dict):
 
     data_js = bmsConfig
 
-    csv_df = set_msg_name(csv_df, id_place, data_place)  # 获取名称列
     csv_df = set_meaning(csv_df, id_place, data_place)   # 获取翻译列
 
     return csv_df
