@@ -417,6 +417,13 @@ def not_config_path():
         root.destroy()
 
 if __name__ == "__main__":
+    # 获取当前脚本的绝对路径
+    current_script_path = os.path.abspath(sys.argv[0])
+    # 获取脚本所在的目录
+    current_script_dir = os.path.dirname(current_script_path)
+    # 更改当前工作目录到脚本所在的目录
+    os.chdir(current_script_dir)
+
     bms_config = {}
     root = Tk()
     root.resizable(False, False)
@@ -439,7 +446,7 @@ if __name__ == "__main__":
         file_path = sys.argv[1]
         file_path_entry.delete(0, END)
         file_path_entry.insert(0, file_path)
-        parse_file() # 自动解析文件
+        # parse_file() # 自动解析文件
     
     root.mainloop()
  
