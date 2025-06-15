@@ -8,3 +8,5 @@ build/
 dist/
 .vscode/
 config/config
+*.zip
+bms-translator-v*.*.*

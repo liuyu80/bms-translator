@@ -1,81 +1,81 @@
-Write-Host "开始构建安装程序..." -ForegroundColor Green
+Write-Host "Building installer..." -ForegroundColor Green
 
 try {
-    Write-Host "正在检查 Python 版本..."
+    Write-Host "Checking Python version..."
     $pythonVersion = (python -c "import sys; print(f'{sys.version_info.major}.{sys.version_info.minor}')")
     if (-not $pythonVersion) {
-        throw "无法获取 Python 版本，请确保 Python 已安装并配置在 PATH 中。"
+        throw "Cannot get Python version. Please ensure Python is installed and in PATH."
     }
-    Write-Host "检测到 Python 版本: $pythonVersion" -ForegroundColor Cyan
+    Write-Host "Detected Python version: $pythonVersion" -ForegroundColor Cyan
 
-    # 假设需要 Python 3.x
+    # Requires Python 3.x
     if ($pythonVersion.StartsWith("2.")) {
-        throw "检测到 Python 2.x 版本，请使用 Python 3.x 版本。"
+        throw "Detected Python 2.x, please use Python 3.x."
     }
-    Write-Host "Python 版本检查通过。" -ForegroundColor Green
+    Write-Host "Python version check passed." -ForegroundColor Green
 
-    Write-Host "正在执行 PyInstaller..."
+    Write-Host "Running PyInstaller..."
     python -m PyInstaller ui.spec
     if ($LASTEXITCODE -ne 0) {
-        throw "PyInstaller 执行失败，退出代码: $LASTEXITCODE"
+        throw "PyInstaller failed with exit code: $LASTEXITCODE"
     }
-    Write-Host "PyInstaller 执行成功。" -ForegroundColor Green
+    Write-Host "PyInstaller succeeded." -ForegroundColor Green
 
-    Write-Host "正在获取最新的 Git 标签..."
+    Write-Host "Getting latest Git tag..."
     $latestTag = git describe --tags --abbrev=0
     if (-not $latestTag) {
-        throw "无法获取最新的 Git 标签。"
+        throw "Cannot get latest Git tag."
     }
     $bmsPathName = "bms-translator-" + $latestTag
-    Write-Host "最新标签: $latestTag" -ForegroundColor Cyan
-    Write-Host "构建路径名称: $bmsPathName" -ForegroundColor Cyan
+    Write-Host "Latest tag: $latestTag" -ForegroundColor Cyan
+    Write-Host "Build path name: $bmsPathName" -ForegroundColor Cyan
 
-    Write-Host "正在创建目标目录: $bmsPathName"
+    Write-Host "Creating target directory: $bmsPathName"
     mkdir -p $bmsPathName
     if (-not (Test-Path $bmsPathName)) {
-        throw "无法创建目录: $bmsPathName"
+        throw "Failed to create directory: $bmsPathName"
     }
-    Write-Host "目标目录创建成功。" -ForegroundColor Green
+    Write-Host "Target directory created." -ForegroundColor Green
 
-    Write-Host "正在复制 config/ 目录..."
+    Write-Host "Copying config/ directory..."
     cp -r config/ $bmsPathName/config/
     if ($LASTEXITCODE -ne 0) {
-        throw "复制 config/ 目录失败。"
+        throw "Failed to copy config/ directory."
     }
-    # 确保 config/ 目录及其内容可读写
+    # Ensure config/ directory is writable
     Get-ChildItem -Path "$bmsPathName/config" -Recurse | ForEach-Object {
         if (($_.Attributes -band [System.IO.FileAttributes]::ReadOnly) -eq [System.IO.FileAttributes]::ReadOnly) {
             $_.IsReadOnly = $false
         }
     }
-    Write-Host "config/ 目录复制成功。" -ForegroundColor Green
+    Write-Host "config/ directory copied." -ForegroundColor Green
 
-    Write-Host "正在复制 dist/ui.exe..."
+    Write-Host "Copying dist/ui.exe..."
     cp dist/ui.exe $bmsPathName/$bmsPathName.exe
     if ($LASTEXITCODE -ne 0) {
-        throw "复制 dist/ui.exe 失败。"
+        throw "Failed to copy dist/ui.exe."
     }
-    # 确保 ui.exe 可读写
+    # Ensure exe is writable
     $exePath = Join-Path $bmsPathName "$bmsPathName.exe"
     if ((Get-Item $exePath).Attributes -band [System.IO.FileAttributes]::ReadOnly) {
         (Get-Item $exePath).IsReadOnly = $false
     }
-    Write-Host "dist/ui.exe 复制成功。" -ForegroundColor Green
+    Write-Host "dist/ui.exe copied." -ForegroundColor Green
 
-    Write-Host "构建目录结构:"
+    Write-Host "Directory structure:"
     tree $bmsPathName
 
-    Write-Host "正在压缩文件到: $bmsPathName.zip"
+    Write-Host "Compressing files to: $bmsPathName.zip"
     Compress-Archive -Path "$bmsPathName" -DestinationPath "$bmsPathName.zip" -Force
     if (-not (Test-Path "$bmsPathName.zip")) {
-        throw "压缩文件失败。"
+        throw "Failed to compress files."
     }
-    Write-Host "文件压缩成功: $bmsPathName.zip" -ForegroundColor Green
+    Write-Host "Files compressed: $bmsPathName.zip" -ForegroundColor Green
 
-    Write-Host "安装程序构建完成！" -ForegroundColor Green
+    Write-Host "Installer build completed!" -ForegroundColor Green
     echo "installer_zip_path=$bmsPathName.zip" >> $env:GITHUB_OUTPUT
 }
 catch {
-    Write-Error "构建安装程序时发生错误: $($_.Exception.Message)"
+    Write-Error "Error building installer: $($_.Exception.Message)"
     exit 1
 }
