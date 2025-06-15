@@ -8,6 +8,7 @@ dependencies = [
     "auto-py-to-exe>=2.46.0",
     "chardet>=5.2.0",
     "openpyxl>=3.1.5",
+    "pywin32>=310",
     "pyyaml>=6.0.2",
 ]
 

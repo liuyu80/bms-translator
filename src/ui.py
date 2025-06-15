@@ -3,7 +3,7 @@ import webbrowser
 from tkinter import Tk, StringVar, IntVar, Label, Entry, Button, END
 from tkinter.ttk import Combobox
 from tkinter.filedialog import askopenfilename
-from tkinter.messagebox import showwarning, showerror
+from tkinter.messagebox import showwarning, showerror, showinfo
 from main import read_bms_config, main_prase
 from utils import get_text_encoding
 import json
@@ -13,6 +13,8 @@ import time
 import csv
 import copy
 import openpyxl
+import sys
+import win32com.client
 
 
 
@@ -306,6 +308,48 @@ def parse_file():
         parse_btn.config(state='normal')
 
 
+def create_sendto_shortcut_ui():
+    try:
+        sendto_path = os.path.join(os.environ['APPDATA'], 'Microsoft', 'Windows', 'SendTo')
+        
+        if getattr(sys, 'frozen', False):
+            # 如果是PyInstaller打包的exe
+            exe_path = os.path.abspath(sys.executable)
+            target_path = exe_path
+            description = "BMS Translator Application"
+        else:
+            # 如果是直接运行的Python脚本 (开发模式)
+            # 假设ui.py是入口，快捷方式指向python解释器和ui.py
+            python_exe = sys.executable
+            script_path = os.path.abspath(sys.argv[0])
+            target_path = python_exe
+            arguments = f'"{script_path}"'
+            description = "BMS Translator (Python Script)"
+
+        shortcut_name = "bms-translator.lnk"
+        shortcut_path = os.path.join(sendto_path, shortcut_name)
+
+        shell = win32com.client.Dispatch("WScript.Shell")
+        shortcut = shell.CreateShortcut(shortcut_path)
+        
+        shortcut.TargetPath = target_path
+        if 'arguments' in locals():
+            shortcut.Arguments = arguments
+        else:
+            shortcut.Arguments = ""
+        
+        shortcut.WindowStyle = 1 # Normal window
+        shortcut.HotKey = ""
+        shortcut.IconLocation = exe_path if getattr(sys, 'frozen', False) else os.path.abspath('./image/favicon256x256.ico') # 使用exe的图标或默认图标
+        shortcut.Description = description
+        shortcut.Save()
+
+        showinfo('成功', f"快捷方式 '{shortcut_name}' 已成功创建在 '{sendto_path}'。")
+
+    except Exception as e:
+        showerror('错误', f"创建快捷方式时发生错误: {e}\n请确保您已安装 pywin32 库 (pip install pywin32)。")
+
+
 def creat_btn():
     file_btn = Button(root, text='选择文件', command=open_file_manager)
     file_btn.place(relx=0.25, y=200)
@@ -314,7 +358,9 @@ def creat_btn():
     parse_btn = Button(root, text='开始解析', command=parse_file)
     parse_btn.place(relx=0.55, y=200)
 
-
+    # 新增的“创建发送到快捷方式”按钮
+    sendto_btn = Button(root, text='创建“发送到”', command=create_sendto_shortcut_ui)
+    sendto_btn.place(relx=0.05, rely=0.85) # 调整位置避免重叠
 
 
 def read_config(path):
@@ -328,7 +374,8 @@ def read_config(path):
             "id_place": 5,
             "data_place": 9,
             "split": '英文逗号(,)',
-            "valid_row": 2
+            "valid_row": 2,
+            "protocols_type": "GB2015" # 添加默认值，避免KeyError
         }
         with open(path, 'w', encoding='utf-8') as fp:
             json.dump(config, fp)
@@ -386,5 +433,13 @@ if __name__ == "__main__":
     creat_btn()
     
     bms_config = read_bms_config('./config/bmsConfig.yaml') # type: ignore
+
+    # 检查命令行参数
+    if len(sys.argv) > 1:
+        file_path = sys.argv[1]
+        file_path_entry.delete(0, END)
+        file_path_entry.insert(0, file_path)
+        parse_file() # 自动解析文件
+    
     root.mainloop()
  

@@ -4,3 +4,4 @@ auto-py-to-exe>=2.46.0
 chardet>=5.2.0
 openpyxl>=3.1.5
 pyyaml>=6.0.2
+pywin32>=310
