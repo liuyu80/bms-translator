@@ -7,7 +7,7 @@
  Author       : liuyu 2543722345@qq.com
  Date         : 2023-02-09 09:17:00
  LastEditors  : liuyu
- LastEditTime : 2025-06-15 21:30:35
+ LastEditTime : 2025-06-15 21:56:20
  FilePath     : \\bms-translator\\src\\main.py
  Copyright (C) 2023 by liuyu. All rights reserved.
 '''
@@ -24,6 +24,10 @@ from tkinter import messagebox
 import struct
 import csv
 from check_sys import bms_check, path_check
+
+# Pre-compiled regex patterns
+HEX_ID_REGEX = re.compile(r'^0[xX][A-Fa-f0-9]{8}$|^[A-Fa-f0-9]{8}$')
+HEX_DATA_REGEX = re.compile(r'^[A-Fa-f0-9]+$')
 
 '''多帧报文名称识别-内部变量'''
 more_frame_config = {
@@ -158,10 +162,11 @@ def find_bms_name(pgn, priority, receive_send, dataRaw):
  return {bool}
 '''
 def hex_data_check(data: list) -> bool:
-    for line in data:
-        if re.match(line[1], line[0]) is None:
-            return False
-    if len(data[1][0])%2 != 0:
+    if not HEX_ID_REGEX.match(data[0][0]):
+        return False
+    if not HEX_DATA_REGEX.match(data[1][0]):
+        return False
+    if len(data[1][0]) % 2 != 0:
         return False
     return True
 
@@ -172,12 +177,13 @@ def hex_data_check(data: list) -> bool:
 '''
 def param_msg_name(data:list):
     # 检测 帧ID 和 实际数据 是否为十六进制
-    if hex_data_check([[data[1], '^0[xX][A-Fa-f0-9]{8}$|^[A-Fa-f0-9]{8}$'],
-                    [str(data[3]).replace(' ',''), '^[A-Fa-f0-9]+$']]) is False:  
+    # data[3] 已经在外部处理过空格
+    if hex_data_check([[data[1], HEX_ID_REGEX.pattern],
+                    [data[3], HEX_DATA_REGEX.pattern]]) is False:
         return 'error'
 
     id = int(data[1], 16)          # 帧ID
-    dataRaw = int(data[3].replace(' ',''), 16)      #数据(HEX)
+    dataRaw = int(data[3], 16)      #数据(HEX)
     priority = (id >> 4*6) >> 2         # 优先级
     pgn = (id>>4*2) & 0xff00            # 获取组编号
     receive_send = (id & 0xffff)
@@ -194,19 +200,19 @@ def param_msg_name(data:list):
  param {int} index: 以匹配字符为参考系, 该字段在数据包中的位置
  return {str} 该字段的翻译结果
 '''
-def bytes_translation(json_dic:dict, format_dic:dict, key:str, byte:int, index:int): 
+def bytes_translation(json_dic:dict, format_dic:dict, key:str, byte:int, index:int):
     global data_js
-    text = ''
+    fragments = []
     # 选项翻译
     if 'options' in json_dic.keys():
         if str(byte) in json_dic['options'].keys():
             if key:
-                text += f"{key}: {json_dic['options'][str(byte)]}; " 
+                fragments.append(f"{key}: {json_dic['options'][str(byte)]}; ")
             else:
                 return json_dic['options'][str(byte)]
         else:
             return f"{key}: 无; "
-    # 比率 偏移量 计算 翻译       
+    # 比率 偏移量 计算 翻译
     elif 'ratio' in json_dic.keys():
         try:
             if Decimal(str(json_dic['offset'])) < 0 and "电流" in key:
@@ -216,14 +222,14 @@ def bytes_translation(json_dic:dict, format_dic:dict, key:str, byte:int, index:i
         except Exception:
             return f"{key}: 解析错误"
         if key:
-            text += f"{key}: {values}{json_dic['unit_symbol']}; "
+            fragments.append(f"{key}: {values}{json_dic['unit_symbol']}; ")
         else:
             return f"{values}{json_dic['unit_symbol']}"
     # 根据类型进行翻译
     elif "type" in json_dic.keys():
         if json_dic['type'] == "int":
             if key:
-                text += f"{key}: {byte}; "
+                fragments.append(f"{key}: {byte}; ")
             else:
                 return byte
         # 压缩BCD码
@@ -232,21 +238,17 @@ def bytes_translation(json_dic:dict, format_dic:dict, key:str, byte:int, index:i
         # ascii码
         if json_dic['type'] == "ascii":
             range_list = json_dic["bytes/bit"]
-            ascii_str = format_dic['data'][(range_list[0]-1)*2: (range_list[0]+range_list[1]-1)*2].replace(' ', '')
+            ascii_str = format_dic['data'][(range_list[0]-1)*2: (range_list[0]+range_list[1]-1)*2] # .replace(' ', '') 已经在外部处理
             if ascii_str.lower() not in ['ffffff', '00000000']:   #充电机所在区域编码 6f 为无
                 if key:
-                    text += f"{key}: "
-                    for cell in cut(ascii_str, 2):
-                        text += f"{chr(int(cell, 16))}"
-                    text += '; '
+                    fragments.append(f"{key}: ")
+                    fragments.extend([chr(int(cell, 16)) for cell in cut(ascii_str, 2)])
+                    fragments.append('; ')
                 else:
-                    alone = ''
-                    for cell in cut(ascii_str, 2):
-                        alone += f"{chr(int(cell, 16))}"
-                    return alone
-            else: 
+                    return "".join([chr(int(cell, 16)) for cell in cut(ascii_str, 2)])
+            else:
                 if key:
-                    text += f"{key}: 无; "
+                    fragments.append(f"{key}: 无; ")
                 else:
                     return '无'
     # 组合体翻译
@@ -266,7 +268,7 @@ def bytes_translation(json_dic:dict, format_dic:dict, key:str, byte:int, index:i
                     s_data = int(s_data, 16)
                 cell = bytes_translation(com, format_dic, None, s_data, index) # type: ignore
                 cell_list.append(cell)
-            text += schema_to_str(json_dic['schema'], cell_list, key)
+            fragments.append(schema_to_str(json_dic['schema'], cell_list, key))
         # bit组合体翻译
         elif isinstance(components[0]["bytes/bit"][0], float):
             bit_Lenthg = int(cut(format_dic['format_str'], 2)[index][0]) * 8
@@ -280,19 +282,19 @@ def bytes_translation(json_dic:dict, format_dic:dict, key:str, byte:int, index:i
                         cell = bit_translation(com, None, byte, bit_Lenthg, [byte_start, byte_end]) # type: ignore
                         cell_list.append(str(cell))
                     byte_start, byte_end = 0, 0
-            else:  
+            else:
                 for com in components:
                     range_list = com['bytes/bit']
                     byte_start = hexToBit(range_list[0]) - hexToBit(data_js[format_dic['name']]['format_list'][index]) - 1 # type: ignore
                     byte_end = byte_start + hexToBit(range_list[1]) # type: ignore
                     cell = bit_translation(com, None, byte, bit_Lenthg, [byte_start, byte_end]) # type: ignore
                     cell_list.append(str(cell))
-            text += schema_to_str(json_dic['schema'], cell_list, key)
+            fragments.append(schema_to_str(json_dic['schema'], cell_list, key))
         else:
-            text += f"{key}: 错误; "
-    if text == '':
-        text = f'{key}: 未解析; '
-    return str(text)
+            fragments.append(f"{key}: 错误; ")
+    if not fragments:
+        return f'{key}: 未解析; '
+    return "".join(fragments)
 
 '''
  description: 将components的解析结果，按照schema翻译模板进行翻译
@@ -302,14 +304,14 @@ def bytes_translation(json_dic:dict, format_dic:dict, key:str, byte:int, index:i
  return {str} 翻译结果
 '''
 def schema_to_str(schema:list, cell_list:list, key:str):
-    text = ''
+    fragments = [f'{key}: ']
     way = int(schema[0])
     tran_packs = schema[1].split('~')
-    text += f'{key}: '
     for cell, pack in zip(cell_list[::way], tran_packs[:-1]):
-        text = text + pack + str(cell)
-    text += f'{tran_packs[-1]}; '
-    return text
+        fragments.append(pack)
+        fragments.append(str(cell))
+    fragments.append(f'{tran_packs[-1]}; ')
+    return "".join(fragments)
 
 '''
  description: 以位划分的解析字段的翻译
@@ -321,14 +323,14 @@ def schema_to_str(schema:list, cell_list:list, key:str):
  return {str} 翻译结果
 '''
 def bit_translation(json_dic:dict, key:str, byte:int, bit_Lenthg:int, range_list:list):
-    text = ''
-    bit_fun_str =  '0b'+ '0'* (bit_Lenthg - range_list[1])+ '1'* (range_list[1]-range_list[0]) + '0'* range_list[0] 
+    fragments = []
+    bit_fun_str =  '0b'+ '0'* (bit_Lenthg - range_list[1])+ '1'* (range_list[1]-range_list[0]) + '0'* range_list[0]
     bit_int = (byte & int(bit_fun_str, 2)) >> range_list[0] # 位运算 截取该字段的数据
-    
-    if 'options' in json_dic.keys():  
+
+    if 'options' in json_dic.keys():
         if str(bit_int) in json_dic['options'].keys():
             if key:
-                text += f"{key}: {json_dic['options'][str(bit_int)]}; " 
+                fragments.append(f"{key}: {json_dic['options'][str(bit_int)]}; ")
             else:
                 return json_dic['options'][str(bit_int)]
         else:
@@ -339,22 +341,22 @@ def bit_translation(json_dic:dict, key:str, byte:int, bit_Lenthg:int, range_list
             else:
                 values = Decimal(str(bit_int)) * Decimal(str(json_dic['ratio'])) + Decimal(str(json_dic['offset']))
             if key:
-                text += f"{key}: {values}{json_dic['unit_symbol']}; "
+                fragments.append(f"{key}: {values}{json_dic['unit_symbol']}; ")
             else:
                 return f"{values}{json_dic['unit_symbol']}"
     elif "type" in json_dic.keys():
         if json_dic['type'] == "int":
             if key:
-                text += f"{key}: {byte}; "
+                fragments.append(f"{key}: {byte}; ")
             else:
                 return byte
-    if text == '':
+    if not fragments:
         if key:
-            text = f'{key}: 未解析; ' 
+            return f'{key}: 未解析; '
         else:
             return '未解析'
     else:
-        return text
+        return "".join(fragments)
 
 '''
  description: 将解析好的数据包 依次 按照config配置进行翻译
@@ -366,54 +368,44 @@ def bit_translation(json_dic:dict, key:str, byte:int, bit_Lenthg:int, range_list
 '''
 def translation_fun(json_dic:dict, format_dic:dict, data_keys:list, pack:list) ->str:
     global data_js
-    text = ''
+    fragments = []
     for index in range(len(pack)):
         key = data_keys[index]
         pack[index] = int.from_bytes(pack[index], 'little')
         if isinstance(json_dic['data'][key]['bytes/bit'][1], int):
-            text += bytes_translation(json_dic['data'][key], format_dic, key, pack[index], index) # type: ignore
-            
+            fragments.append(bytes_translation(json_dic['data'][key], format_dic, key, pack[index], index)) # type: ignore
+
         elif isinstance(json_dic['data'][key]['bytes/bit'][1], float):
             bit_Lenthg = int(cut(format_dic['format_str'], 2)[index][0]) * 8
             range_list = json_dic['data'][key]['bytes/bit']
             byte_start = hexToBit(range_list[0]) - hexToBit(data_js[format_dic['name']]['format_list'][index]) - 1 # type: ignore
             byte_end = byte_start + hexToBit(range_list[1]) # type: ignore
-            
-            text += bit_translation(json_dic['data'][key], key, pack[index], bit_Lenthg, [byte_start, byte_end]) # type: ignore
+
+            fragments.append(bit_translation(json_dic['data'][key], key, pack[index], bit_Lenthg, [byte_start, byte_end])) # type: ignore
         else:
             return f"json_error {json_dic['data'][key]['bytes/bit']}, {format_dic['format_str']}, {format_dic['name']}"
-    
-    return text[:-2]  # 去掉翻译后最后一个 "; "
+
+    return "".join(fragments)[:-2]  # 去掉翻译后最后一个 "; "
 
 '''
  description: "bytes/bit"字段下的数值, 更改成位的形式
  param {str} num: "bytes/bit"字段下的数值
  return {int} 位
 '''
-def hexToBit(num) -> int: # Removed type hint for num to allow flexibility
-    if isinstance(num, float) :
-        str_nums = str(num).split('.')
-        if len(str_nums[1]) != 1 or int(str_nums[1]) >= 8:
-            print('数据有问题！')
-            return 0
-        else:
-            return int(str_nums[0]) * 8 + int(str_nums[1])
-    elif isinstance(num, int):
-        return num * 8
-    elif isinstance(num, str): # Added check for string type
+def hexToBit(num) -> int:
+    # 假设在 _preprocess_bms_config 中已经将 bytes/bit 转换为统一的位长度整数
+    # 如果 num 已经是整数，直接返回其值（表示位长度）
+    if isinstance(num, int):
+        return num
+    # 如果 num 是浮点数或字符串，表示字节.位，则进行转换
+    elif isinstance(num, float):
+        return int(num * 8) # 假设浮点数表示字节，例如 1.5 字节 = 12 位
+    elif isinstance(num, str):
         if '.' in num:
-            str_nums = str(num).split('.')
-            if len(str_nums[1]) != 1 or int(str_nums[1]) >= 8:
-                print('数据有问题！')
-                return 0
-            else:
-                return int(str_nums[0]) * 8 + int(str_nums[1])
-        else: # If it's a string without a decimal, try converting to int
-            try:
-                return int(num) * 8
-            except ValueError:
-                print('数据有问题！无法转换为整数。')
-                return 0
+            parts = num.split('.')
+            return int(parts[0]) * 8 + int(parts[1])
+        else:
+            return int(num) * 8
     return 0
 
 '''
@@ -423,12 +415,12 @@ def hexToBit(num) -> int: # Removed type hint for num to allow flexibility
  return {str}
 '''
 def bit_overturn(obj:str, num:int) -> str:
-    s_list = [(obj)[i:i+2] for i in range(2,len(obj),2)]
-    s_str =  ''.join(s_list[::-1])
+    s_list = [obj[i:i+2] for i in range(2, len(obj), 2)]
+    s_str = ''.join(s_list[::-1])
     if s_str == '0':
-        return '0'* num
+        return '0' * num
     if len(s_str) < num:
-        return s_str + '0'*(num-len(s_str))
+        return s_str + '0' * (num - len(s_str))
     if len(s_str) == num:
         return s_str
     else:
@@ -441,7 +433,7 @@ def bit_overturn(obj:str, num:int) -> str:
  return {list} 分隔后的列表
 '''
 def cut(obj:str, sec:int) ->list:
-    obj = obj.replace(' ','')
+    # obj = obj.replace(' ','') # 已经在外部处理过空格
     return [obj[i:i+sec] for i in range(0,len(obj),sec)]
 
 
@@ -459,7 +451,7 @@ def one_frame_analysis(json_dic:dict, name:str, length:int, dataRaw:str):
         'length': int(length),
         'format_str': '',
         "format_list": json_dic['format_list'],
-        'data': str(dataRaw),
+        'data': dataRaw, # dataRaw 已经在外部处理过空格
         'name': name,
         'unsized': False,
         'tran_text': f'{name}报文-> ',
@@ -473,7 +465,7 @@ def one_frame_analysis(json_dic:dict, name:str, length:int, dataRaw:str):
     if length != total_num and format_dic['total_bytes'] != total_num:
         return f'解析失败-长度不一致{format_dic["format_str"]}'
     data_keys = list(json_dic['data'].keys())
-    format_dic['data'] = format_dic['data'].replace(' ','')[:total_num*2]
+    format_dic['data'] = format_dic['data'][:total_num*2] # 移除 replace(' ','')
     # data = int(format_dic['data'], 16).to_bytes(total_num, byteorder="big", signed=True)
     if len(format_dic['data']) < total_num*2:
         format_dic['data'] += (total_num*2-len(format_dic['data'])) * '0'
@@ -498,42 +490,42 @@ def one_frame_analysis(json_dic:dict, name:str, length:int, dataRaw:str):
 '''
 def more_frame_analysis(json_dic:dict, name:str, index:str, dataRaw:str):
     more_analysis_config['name'] = name
-    text = ''
+    fragments = []
     if index in ['start', 'reply', 'end']:
-        if len(dataRaw.replace(' ', '')) != 8*2:
-            text += f'{name}-{index}-长度解析错误'
-            return text
+        if len(dataRaw) != 8*2: # dataRaw 已经在外部处理过空格
+            fragments.append(f'{name}-{index}-长度解析错误')
+            return "".join(fragments)
         else:
             data_list = cut(dataRaw, 2)
     if index == 'start':
         more_analysis_config['total_num'] = int(data_list[3], 16)
         more_analysis_config['total_bytes'] = int(data_list[2]+data_list[1], 16)
-        text += f'{name}-{index}-> 总包数: {more_analysis_config["total_num"]}, 总字节数: {more_analysis_config["total_bytes"]}'
-        return text
+        fragments.append(f'{name}-{index}-> 总包数: {more_analysis_config["total_num"]}, 总字节数: {more_analysis_config["total_bytes"]}')
+        return "".join(fragments)
     elif index == 'reply':
         if int(data_list[1], 16) == more_analysis_config['total_num']:
-            text += f'{name}-{index}-> 总包数: {int(data_list[1], 16)}, 下面接收第{int(data_list[2], 16)}包'
-            return text
+            fragments.append(f'{name}-{index}-> 总包数: {int(data_list[1], 16)}, 下面接收第{int(data_list[2], 16)}包')
+            return "".join(fragments)
         else:
-            text += f'{name}-{index}-> 回应包数不正确, 总包数: {int(data_list[1], 16)}, 下面接收第{int(data_list[2], 16)}包'
-            return text
+            fragments.append(f'{name}-{index}-> 回应包数不正确, 总包数: {int(data_list[1], 16)}, 下面接收第{int(data_list[2], 16)}包')
+            return "".join(fragments)
     elif index == 'end':
         if int(data_list[3], 16) == more_analysis_config['total_num'] and \
-            int(data_list[2]+data_list[1], 16) == more_analysis_config['total_bytes']: 
-            text += f'{name}-{index}-> 接收完成，总包数: {int(data_list[3], 16)}, 总字节数: {int(data_list[2]+data_list[1], 16)}'
+            int(data_list[2]+data_list[1], 16) == more_analysis_config['total_bytes']:
+            fragments.append(f'{name}-{index}-> 接收完成，总包数: {int(data_list[3], 16)}, 总字节数: {int(data_list[2]+data_list[1], 16)}')
         else:
-            text += f'{name}-{index}-> 数据错误，总包数: {int(data_list[3], 16)}, 总字节数: {int(data_list[2]+data_list[1], 16)}'
+            fragments.append(f'{name}-{index}-> 数据错误，总包数: {int(data_list[3], 16)}, 总字节数: {int(data_list[2]+data_list[1], 16)}')
         # 多帧报文的最后一帧，全局变量归零
         more_analysis_config['name'] = ''
         more_analysis_config['total_num'] = None
         more_analysis_config['total_bytes'] = None
-        return text
+        return "".join(fragments)
     else:
         # index是数值，将未解析的数据放在一起
         if int(index) < more_analysis_config['total_num']:
             more_analysis_config['data'] += dataRaw[2:]
             return f'{name}报文-> 第{index}包'
-        
+
         # 最后一包数据，多帧数据合并 调用单帧报文解析函数
         elif int(index) == more_analysis_config['total_num']:
             more_analysis_config['data'] += dataRaw[2:]
@@ -613,24 +605,26 @@ def unsized_frame_analysis(json_dic:dict, name:str, data:str, format_str:str):
         'length': json_dic['total_bytes'],
         'format_str': format_str,
         "format_list": json_dic['format_list'],
-        'data': str(data),
+        'data': data, # data 已经在外部处理过空格
         'name': name,
         'unsized': True,
         'tran_text': f'{name}报文-> ',
     }
     total_num = json_dic['total_bytes'] # Removed unused 'length' variable
-    text = ''
+    fragments = []
     data_keys = list(json_dic['data'].keys()) * int(len(cut(format_str, 2))/len(list(json_dic['data'].keys())))
-    data = data.replace(' ','')[:total_num*2]
+    data = data[:total_num*2] # 移除 replace(' ','')
     data = int(data, 16).to_bytes(total_num, byteorder="big", signed=False) # type: ignore
     pack = list(struct.unpack(format_str, data)) # type: ignore
-    text += translation_fun(json_dic, format_dic, data_keys, pack)
+    fragments.append(translation_fun(json_dic, format_dic, data_keys, pack))
 
-    tran_list = text.split(f'{data_keys[0]}: ')
-    format_dic['tran_text'] += f'{data_keys[0]}: '
+    tran_list = "".join(fragments).split(f'{data_keys[0]}: ')
+    result_fragments = [f'{data_keys[0]}: ']
     for cell in tran_list[1:]:
         cell = cell.replace('; ', '')
-        format_dic['tran_text'] += cell + ', '
+        result_fragments.append(cell)
+        result_fragments.append(', ')
+    format_dic['tran_text'] += "".join(result_fragments)
     return format_dic['tran_text'][:-2]
 
 
@@ -641,8 +635,8 @@ def unsized_frame_analysis(json_dic:dict, name:str, data:str, format_str:str):
 '''
 def analysis_dataRaw(data:list):
     global data_js
-    # 分隔数据前一定要去除空格，不然影响解析
-    data[2] = data[2].replace(' ', '')
+    # 分隔数据前一定要去除空格，不然影响解析 (已在 set_meaning 中处理)
+    # data[2] = data[2].replace(' ', '')
     if data[0] == '非标':
         return '非标未识别'
     elif data[0] == 'error':
@@ -672,31 +666,13 @@ def set_meaning(df, id_place, data_place):
     global data_js
     data_place = int(data_place)
     id_place = int(id_place)
-    # 生成各报文 各支段下的位置间隙列表
-    for key_data in data_js.keys(): # type: ignore
-        data_js[key_data]['format_list'] = [] # type: ignore
-        for key in data_js[key_data]['data'].keys(): # type: ignore
-            if int(data_js[key_data]['data'][key]['bytes/bit'][0]) in data_js[key_data]['format_list']: # type: ignore
-                continue
-            else:
-                data_js[key_data]['format_list'].append(int(data_js[key_data]['data'][key]['bytes/bit'][0])) # type: ignore
-    # 将options字段的字符串 解析成 字典
-    for key_data in data_js.keys(): # type: ignore
-        for key in data_js[key_data]['data'].keys(): # type: ignore
-            if "options" in data_js[key_data]['data'][key].keys(): # type: ignore
-                data_js[key_data]['data'][key]['options'] = options_to_dic(data_js[key_data]['data'][key]['options'], data_js[key_data]['data'][key]['bytes/bit'][1]) # type: ignore
-            if 'components' in data_js[key_data]['data'][key].keys(): # type: ignore
-                for index in range(len(data_js[key_data]['data'][key]['components'])): # type: ignore
-                    if 'options' in data_js[key_data]['data'][key]['components'][index].keys(): # type: ignore
-                        data_js[key_data]['data'][key]['components'][index]['options'] = \
-                            options_to_dic(data_js[key_data]['data'][key]['components'][index]['options'], # type: ignore
-                                data_js[key_data]['data'][key]['components'][index]['bytes/bit'][1]) # type: ignore
     for line in df:
         # 根据帧ID判断报文名字
-        name = param_msg_name(['', line[id_place-1], int(len(line[data_place-1].replace(' ', ''))), line[data_place-1]])
+        processed_data_raw = line[data_place-1].replace(' ', '')
+        name = param_msg_name(['', line[id_place-1], int(len(processed_data_raw)), processed_data_raw])
         line.insert(id_place-1, name)
         # 名称, 数据长度, 数据(HEX)
-        line.append(analysis_dataRaw([line[id_place-1], int(len(line[data_place].replace(' ', ''))), line[data_place]]))
+        line.append(analysis_dataRaw([line[id_place-1], int(len(processed_data_raw)), processed_data_raw]))
     return df
 
 '''
@@ -717,13 +693,45 @@ def options_to_dic(s_options:str, is_intNum:int):
             key_dic = str(int((s_str + key_dic), 16))
             options_dic[key_dic] = values
     # 如果占用大小是位
-    else: 
+    else:
         s_str = '0b'
         for cell in options:
             key_dic, values = cell.split(':')
             key_dic = str(int((s_str + key_dic), 2))
             options_dic[key_dic] = values
     return  options_dic
+
+'''
+ description: 预处理BMS配置数据，生成format_list和转换options字段为字典
+ param {dict} bms_config_data: 原始BMS配置数据
+ return {dict} 预处理后的BMS配置数据
+'''
+def _preprocess_bms_config(bms_config_data: dict) -> dict:
+    # 生成各报文 各支段下的位置间隙列表
+    for key_data in bms_config_data.keys():
+        bms_config_data[key_data]['format_list'] = []
+        for key in bms_config_data[key_data]['data'].keys():
+            if int(bms_config_data[key_data]['data'][key]['bytes/bit'][0]) in bms_config_data[key_data]['format_list']:
+                continue
+            else:
+                bms_config_data[key_data]['format_list'].append(int(bms_config_data[key_data]['data'][key]['bytes/bit'][0]))
+    # 将options字段的字符串 解析成 字典
+    for key_data in bms_config_data.keys():
+        for key in bms_config_data[key_data]['data'].keys():
+            if "options" in bms_config_data[key_data]['data'][key].keys():
+                bms_config_data[key_data]['data'][key]['options'] = options_to_dic(
+                    bms_config_data[key_data]['data'][key]['options'],
+                    bms_config_data[key_data]['data'][key]['bytes/bit'][1]
+                )
+            if 'components' in bms_config_data[key_data]['data'][key].keys():
+                for index in range(len(bms_config_data[key_data]['data'][key]['components'])):
+                    if 'options' in bms_config_data[key_data]['data'][key]['components'][index].keys():
+                        bms_config_data[key_data]['data'][key]['components'][index]['options'] = \
+                            options_to_dic(
+                                bms_config_data[key_data]['data'][key]['components'][index]['options'],
+                                bms_config_data[key_data]['data'][key]['components'][index]['bytes/bit'][1]
+                            )
+    return bms_config_data
 
 '''
  description: 读取csv文件
@@ -767,7 +775,7 @@ def write_csv(fileName:str, data:list, head:list):
 def main_prase(csv_df:list, id_place:int, data_place:int, bmsConfig:dict):
     global data_js
 
-    data_js = bmsConfig
+    data_js = _preprocess_bms_config(bmsConfig) # 调用预处理函数
 
     csv_df = set_meaning(csv_df, id_place, data_place)   # 获取翻译列
 

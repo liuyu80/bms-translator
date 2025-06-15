@@ -223,7 +223,6 @@ def check_data(data: list, idx: int , datax: int) -> bool:
 
 def parse_asc_file(asc_file) -> list:
     regex_pattern = r"^(\d+\.\d+).*?(\w+f456|\w+56f4).*?d\s(\d+)\s(.*?)$"
-    output_csv_path = 'matched_data.csv'
     matched_data_list = []
 
     with open(asc_file, 'r', encoding='utf-8') as infile:
