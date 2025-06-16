@@ -35,6 +35,7 @@ dependencies = [
     { name = "openpyxl" },
     { name = "pywin32" },
     { name = "pyyaml" },
+    { name = "tkinterdnd2" },
 ]
 
 [package.metadata]
@@ -44,6 +45,7 @@ requires-dist = [
     { name = "openpyxl", specifier = ">=3.1.5" },
     { name = "pywin32", specifier = ">=310" },
     { name = "pyyaml", specifier = ">=6.0.2" },
+    { name = "tkinterdnd2", specifier = ">=0.4.3" },
 ]
 
 [[package]]
@@ -509,6 +511,15 @@ source = { registry = "https://mirrors.aliyun.com/pypi/simple/" }
 sdist = { url = "https://mirrors.aliyun.com/pypi/packages/18/5d/3bf57dcd21979b887f014ea83c24ae194cfcd12b9e0fda66b957c69d1fca/setuptools-80.9.0.tar.gz", hash = "sha256:f36b47402ecde768dbfafc46e8e4207b4360c654f1f3bb84475f0a28628fb19c" }
 wheels = [
     { url = "https://mirrors.aliyun.com/pypi/packages/a3/dc/17031897dae0efacfea57dfd3a82fdd2a2aeb58e0ff71b77b87e44edc772/setuptools-80.9.0-py3-none-any.whl", hash = "sha256:062d34222ad13e0cc312a4c02d73f059e86a4acbfbdea8f8f76b28c99f306922" },
+]
+
+[[package]]
+name = "tkinterdnd2"
+version = "0.4.3"
+source = { registry = "https://mirrors.aliyun.com/pypi/simple/" }
+sdist = { url = "https://mirrors.aliyun.com/pypi/packages/6e/2a/9d50ee58c7a60bf0c8d4bd8030b4afc29c8bf60158f95dbc89e8081d29d2/tkinterdnd2-0.4.3.tar.gz", hash = "sha256:03a932a11b42ab139c4552b414aa10ee8a087b8386b52baca8c62939760c2ef2" }
+wheels = [
+    { url = "https://mirrors.aliyun.com/pypi/packages/08/c3/e04f004a53c00dc01126b6f998264cef672c6883c36aa4bd65845a8eb4c0/tkinterdnd2-0.4.3-py3-none-any.whl", hash = "sha256:8804f5d2e2a99713ec93e85384397fec6bf66fdf2065e3750938d55018971c4a" },
 ]
 
 [[package]]

@@ -1,3 +1,4 @@
+from tkinterdnd2 import DND_FILES, TkinterDnD
 from tkinter import Text
 import webbrowser
 from tkinter import Tk, StringVar, IntVar, Label, Entry, Button, END
@@ -361,6 +362,16 @@ def creat_btn():
     sendto_btn = Button(root, text='创建“发送到”', command=create_sendto_shortcut_ui)
     sendto_btn.place(relx=0.05, rely=0.85) # 调整位置避免重叠
 
+def drop_file(event):
+    global file_path
+    drop_file_path = event.data.strip('{}') # 移除可能存在的花括号
+    # 如果有多个文件被拖放，event.data会是一个空格分隔的字符串，这里只取第一个
+    if ' ' in drop_file_path:
+        drop_file_path = drop_file_path.split(' ')[0]
+    file_path_entry.delete(0, END)
+    file_path_entry.insert(0, drop_file_path)
+    print(f'drop_file_path:{drop_file_path}')
+    file_path = drop_file_path
 
 def read_config(path):
     if os.path.exists(path):
@@ -425,7 +436,7 @@ if __name__ == "__main__":
         os.chdir(current_script_dir)
 
     bms_config = {}
-    root = Tk()
+    root = TkinterDnD.Tk()
     root.resizable(False, False)
     not_config_path()
     if os.path.exists('./config/bms.ico'):
@@ -447,6 +458,8 @@ if __name__ == "__main__":
         file_path_entry.delete(0, END)
         file_path_entry.insert(0, file_path)
         # parse_file() # 自动解析文件
+    root.drop_target_register(DND_FILES)
+    root.dnd_bind('<<Drop>>', drop_file)
     
     root.mainloop()
  

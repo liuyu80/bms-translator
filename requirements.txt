@@ -5,3 +5,4 @@ chardet>=5.2.0
 openpyxl>=3.1.5
 pyyaml>=6.0.2
 pywin32>=310
+tkinterdnd2>=0.4.3
