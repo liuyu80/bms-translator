@@ -3,7 +3,7 @@ name = "bms-translator"
 version = "0.1.0"
 description = "Add your description here"
 readme = "README.md"
-requires-python = ">=3.8"
+requires-python = ">=3.10"
 dependencies = [
     "auto-py-to-exe>=2.46.0",
     "chardet>=5.2.0",
@@ -13,5 +13,5 @@ dependencies = [
 ]
 
 [[tool.uv.index]]
-url = "https://pypi.tuna.tsinghua.edu.cn/simple"
-default = true
+name = "aliyun"
+url = "https://mirrors.aliyun.com/pypi/simple/"
