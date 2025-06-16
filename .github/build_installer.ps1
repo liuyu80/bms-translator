@@ -62,6 +62,17 @@ try {
     }
     Write-Host "dist/ui.exe copied." -ForegroundColor Green
 
+    Write-Host "Copying README.md and LICENSE..."
+    cp README.md $bmsPathName/
+    if ($LASTEXITCODE -ne 0) {
+        throw "Failed to copy README.md."
+    }
+    cp LICENSE $bmsPathName/
+    if ($LASTEXITCODE -ne 0) {
+        throw "Failed to copy LICENSE."
+    }
+    Write-Host "README.md and LICENSE copied." -ForegroundColor Green
+
     Write-Host "Directory structure:"
     tree $bmsPathName
 
