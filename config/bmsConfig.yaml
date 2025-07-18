@@ -1877,7 +1877,7 @@ GB2015:
         unit_symbol: V
   CFC:
     describe: 充电机电流偏移量识别报文
-    PGN: '0x3100'
+    PGN: '0x3000'
     priority: 6
     total_bytes: 2
     receive_send: '0x56f4'
@@ -1910,7 +1910,7 @@ GB2015:
         - '充电枪: ~; 识别情况: ~'
   BFC:
     describe: BMS电流偏移量识别报文
-    PGN: '0x3000'
+    PGN: '0x3100'
     priority: 6
     total_bytes: 2
     receive_send: '0xf456'
