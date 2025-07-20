@@ -1880,7 +1880,7 @@ GB2015:
     PGN: '0x3000'
     priority: 6
     total_bytes: 2
-    receive_send: '0x56f4'
+    receive_send: '0xf456'
     optional_count: 0
     data:
       电流偏移量:
@@ -1913,7 +1913,7 @@ GB2015:
     PGN: '0x3100'
     priority: 6
     total_bytes: 2
-    receive_send: '0xf456'
+    receive_send: '0x56f4'
     optional_count: 0
     data:
       电流偏移量:
